@@ -264,6 +264,7 @@
     const dx = move / steps || 0;
     const startOnDrum = dr.ropeLengthM - p.ropeOutM;
     const ratedKg = lbToKg(p.ratedLb);
+    const volts = num(p.volts, D.rule("power").params.volts);
     const points = [];
     let timeS = 0;
     let ah = 0;
@@ -281,7 +282,10 @@
         ah += (m.amps * dt) / 3600;
       }
       if (failsAtM === null && availKg < p.winchKg) failsAtM = x;
-      points.push({ x, t: timeS, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, onDrumM: onDrum, fractionOfRating: m.fractionOfRating });
+      // power: drawn = volts x amps; at the rope = rope pull (N) x rope speed (m/s)
+      const elecKw = (volts * m.amps) / 1000;
+      const ropeKw = (p.winchKg * G * (m.lineSpeedMMin / 60)) / 1000;
+      points.push({ x, t: timeS, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, onDrumM: onDrum, fractionOfRating: m.fractionOfRating, elecKw, ropeKw });
     }
     const peak = points.reduce((a, b) => (b.amps > a.amps ? b : a), points[0]);
     const minMargin = points.reduce((m, pt) => Math.min(m, pt.availKg / pt.neededKg), Infinity);
@@ -290,6 +294,8 @@
       timeS,
       ah,
       peakAmps: peak.amps,
+      peakKw: peak.elecKw,
+      wh: ah * volts,
       peakPoint: peak,
       startLayer: points[0].layer,
       endLayer: points[points.length - 1].layer,

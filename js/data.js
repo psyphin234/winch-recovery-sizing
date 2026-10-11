@@ -230,6 +230,16 @@
       checked: "2026-10-11",
     },
     {
+      id: "power",
+      category: "calculation",
+      title: "Power",
+      summary: "Power drawn from the battery is voltage × current. The page uses 12 V, the voltage of WARN's ZEON 10 chart; under a heavy pull the real voltage sags, so the real figure is a little lower. Power delivered at the rope is rope pull × rope speed. The difference between the two is lost in the motor, gearbox and drum as heat.",
+      quote: "",
+      sources: ["physics", "warnZeon10"],
+      params: { volts: 12 },
+      checked: "2026-10-11",
+    },
+    {
       id: "engine-running",
       category: "maker",
       title: "Run the engine while winching",

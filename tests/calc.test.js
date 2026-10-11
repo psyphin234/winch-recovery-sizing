@@ -201,6 +201,17 @@
     eq(C.shackleFor(9000), null, "beyond the table");
   });
 
+  test("power: 12 V x current drawn, rope pull x rope speed delivered", () => {
+    // WARN ZEON 10 at its full 10 000 lb on layer 1: 409 A, 4.8 ft/min
+    const dr = C.drum({ drumDiaMm: 80, drumLengthMm: 229, ropeDiaMm: 9.52, ropeLengthM: 24.38 });
+    const s = C.simulate({ drum: dr, ropeOutM: 20, moveM: 0.1, parts: 1, winchKg: C.lbToKg(10000), ratedLb: 10000, chart: D.zeon10.chart, chartRatedLb: 10000 });
+    const p = s.points[0];
+    near(p.elecKw, (12 * 409) / 1000, 1e-9, "drawn");
+    near(p.ropeKw, (C.lbToKg(10000) * 9.80665 * ((4.8 * 0.3048) / 60)) / 1000, 1e-9, "at the rope");
+    if (!(p.ropeKw < p.elecKw)) throw new Error("the rope can't get more power than the battery gives");
+    near(s.wh, s.ah * 12, 1e-12, "watt-hours");
+  });
+
   // ------------------------------------------------------------ winch rating as typed
   test("winch ratings read the way people write them", () => {
     const lb = (t) => Math.round(C.parseRating(t).lb);

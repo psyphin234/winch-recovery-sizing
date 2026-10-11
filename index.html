@@ -148,11 +148,13 @@
               <p class="box-title">Current the winch draws</p>
               <div id="gauge"></div>
               <figcaption><strong id="amps-now">0 A</strong><span>current draw</span></figcaption>
+              <div class="power" id="power-now" aria-live="off"></div>
             </figure>
           </div>
           <div class="play-main">
             <div id="chart-pull"></div>
             <div id="chart-amps"></div>
+            <div id="chart-power"></div>
             <div class="play-bar">
               <button type="button" class="play-button" id="play">&#9654; Play the pull</button>
               <label class="mini-field">The vehicle must move <input id="moveM" type="number" inputmode="decimal" min="1" step="1" aria-label="Distance the vehicle must move"><span>m to be free</span></label>
