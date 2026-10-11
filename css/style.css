@@ -1911,6 +1911,9 @@ select:focus {
 .ctl--ground,
 .ctl--bog { grid-column: 1 / -1; }
 
+/* the rope angle sits in the rope section, above the top view */
+.rig-angle { margin: 4px 0 10px; max-width: 640px; }
+
 .chips--icons .chip { max-width: 230px; }
 
 .ctl-label small {
@@ -2547,7 +2550,7 @@ select:focus {
   color: var(--text-muted);
 }
 
-.gauge-box strong {
+.gauge-box figcaption strong {
   font-family: var(--font-display);
   font-size: 1.9rem;
   line-height: 1;
@@ -2653,6 +2656,8 @@ select:focus {
 }
 
 .readout-label { font-size: 0.75rem; color: var(--text-muted); }
+.readout--live .readout-value { font-variant-numeric: tabular-nums; }
+#play-part.is-playing .readout--live { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
 .readout-value { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.1; }
 .readout-sub { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -2810,6 +2815,39 @@ select:focus {
 .layer-box--pass { background: color-mix(in srgb, var(--pass) 30%, var(--surface-2)); color: var(--pass); }
 .layer-box--fail { background: color-mix(in srgb, var(--fail) 22%, var(--surface-2)); color: var(--fail); }
 .layer-box.is-used { box-shadow: 0 0 0 2px var(--text); }
+
+/* your winch, at the top of the size section */
+.your-winch {
+  --tone: var(--incomplete);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 22px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--tone);
+}
+
+.your-winch--pass { --tone: var(--pass); }
+.your-winch--warn { --tone: var(--warn); }
+.your-winch--fail { --tone: var(--fail); }
+.your-winch--info { --tone: var(--info); }
+
+@media (max-width: 560px) {
+  .your-winch { grid-template-columns: 1fr; }
+}
+
+.yw-id { display: grid; }
+.yw-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.yw-name { font-family: var(--font-display); font-size: 1.7rem; line-height: 1.1; }
+.yw-rating { font-size: 0.85rem; color: var(--text-muted); }
+.yw-says p { margin: 0; }
+.yw-verdict { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.yw-verdict .status-icon { width: 22px; height: 22px; font-size: 0.8rem; }
+.yw-vs { margin-top: 4px !important; font-size: 0.88rem; color: var(--text-muted); }
 
 #stage-sources { padding: 0 16px 16px; }
 

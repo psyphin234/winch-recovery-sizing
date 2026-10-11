@@ -29,6 +29,7 @@
   let gaugeView = null;
   let angleView = null;
   let charts = [];
+  let live = {}; // the readouts that count up as the pull plays
   const play = { raf: 0, x: null };
 
   // ------------------------------------------------------------ state
@@ -445,8 +446,6 @@
       gaugeView.set(0);
       $("amps-now").textContent = "– A";
       $("chart-pull").replaceChildren(el("p", { class: "muted play-empty" }, cur.status === "rolls" ? "Downhill: nothing to pull." : "Type your winch on the picture above to play the pull."));
-      $("chart-amps").replaceChildren();
-      $("chart-power").replaceChildren();
       $("power-now").replaceChildren();
       $("readouts").replaceChildren();
       charts = [];
@@ -456,39 +455,29 @@
     const w = $("chart-pull").clientWidth || 600;
     const tipLines = (p) => [`${U.n(p.x, 0.1)} m moved · layer ${p.layer}`, `Winch can pull ${U.kg(p.availKg)}`, `Needed ${U.kg(p.neededKg)}`, `${U.n(p.amps, 1)} A · rope ${U.n(p.lineSpeedMMin, 0.1)} m/min`, `${U.n(p.elecKw, 0.1)} kW drawn · ${U.n(p.ropeKw, 0.01)} kW at the rope`];
     const pullChart = V.lineChart({
-      width: w, height: 180, points: sim.points, yUnit: "kg", labelEnds: true, tip: tipLines,
+      width: w, height: 200, points: sim.points, yUnit: "kg", xLabel: "Metres the vehicle has moved", labelEnds: true, tip: tipLines,
       series: [
         { key: "availKg", cls: "ch-line--avail", step: true, label: "Winch can pull", short: "Winch" },
         { key: "neededKg", cls: "ch-line--need", label: "Pull needed", short: "Needed" },
       ],
       aria: "Pull the winch can give, layer by layer, against the rope pull needed, over the distance pulled",
     });
-    const ampsChart = V.lineChart({
-      width: w, height: 120, points: sim.points, yUnit: "A", labelEnds: true, tip: tipLines,
-      series: [{ key: "amps", cls: "ch-line--amps", step: true, label: "Current", short: "Amps" }],
-      aria: "Current the winch draws over the distance pulled",
-    });
-    const powerChart = V.lineChart({
-      width: w, height: 150, points: sim.points, yUnit: "kW", xLabel: "Metres the vehicle has moved", labelEnds: true, tip: tipLines,
-      series: [
-        { key: "elecKw", cls: "ch-line--elec", step: true, label: "Drawn", short: "Drawn" },
-        { key: "ropeKw", cls: "ch-line--rope", step: true, label: "At the rope", short: "Rope" },
-      ],
-      aria: "Power drawn from the battery and power delivered at the rope, over the distance pulled",
-    });
     $("chart-pull").replaceChildren(el("p", { class: "chart-title" }, el("span", { class: "key key--avail" }), "Winch can pull ", el("span", { class: "key key--need" }), "Pull needed"), pullChart.el);
-    $("chart-amps").replaceChildren(el("p", { class: "chart-title" }, el("span", { class: "key key--amps" }), "Current the winch draws"), ampsChart.el);
-    $("chart-power").replaceChildren(el("p", { class: "chart-title" }, el("span", { class: "key key--elec" }), "Power drawn ", el("span", { class: "key key--rope" }), "Power at the rope"), powerChart.el);
-    charts = [pullChart, ampsChart, powerChart];
+    charts = [pullChart];
     play.peakKw = sim.peakKw;
 
+    live = {};
+    const tile = (key, label) => {
+      live[key] = { value: el("strong", { class: "readout-value" }), sub: el("span", { class: "readout-sub" }) };
+      return el("div", { class: "readout readout--live" }, el("span", { class: "readout-label" }, label), live[key].value, live[key].sub);
+    };
     $("readouts").replaceChildren(
-      readout("Winching time", `${U.n(sim.timeS / 60, 0.1)} min`, `to move ${U.n(R.moveM, 0.1)} m`),
-      readout("Peak current", `${U.n(sim.peakAmps, 1)} A`, `on layer ${sim.peakPoint.layer}`),
-      readout("Drawn from the battery", `${U.n(sim.ah, 0.1)} Ah`, `${U.n(sim.wh, 1)} Wh at 12 V · run the engine (WARN)`),
-      readout("Peak power", `${U.n(sim.peakKw, 0.1)} kW`, "drawn, at 12 V"),
-      readout("Rope wound in", `${U.n(S.parts * R.moveM, 0.1)} m`, `layer ${sim.startLayer} → ${sim.endLayer}`),
-      el("p", { class: "readout-note" }, "Current and speed from WARN's published ZEON 10 chart, scaled to your winch's rating; the drum and rope drawn are the ZEON 10's. Yours will be similar, not identical. The pull needed is held steady all the way, which is cautious: it usually drops once the vehicle is free. Duty cycle differs by winch: check your manual.")
+      tile("amps", "Amps drawn now"),
+      tile("ah", "Drawn so far"),
+      tile("kw", "Power now"),
+      tile("time", "Winching time"),
+      tile("moved", "Vehicle moved"),
+      el("p", { class: "readout-note" }, "These count up as the pull plays. Current and speed from WARN's published ZEON 10 chart, scaled to your winch's rating, at its 12 V; the drum and rope drawn are the ZEON 10's. Yours will be similar, not identical. The pull needed is held steady all the way, which is cautious: it usually drops once the vehicle is free. Run the engine while winching (WARN), and check your manual's duty cycle.")
     );
     if (!play.raf) frame(play.x === null ? R.moveM : Math.min(play.x, R.moveM));
   }
@@ -527,6 +516,22 @@
     gaugeView.set(p.amps);
     $("amps-now").textContent = `${U.n(p.amps, 1)} A`;
     renderPower(p);
+    // time and charge add up between steps, so interpolate them
+    const q = pts[Math.min(i + 1, pts.length - 1)];
+    const f = q.x === p.x ? 0 : Math.max(0, Math.min(1, (x - p.x) / (q.x - p.x)));
+    const t = p.t + f * (q.t - p.t);
+    const ah = p.ah + f * (q.ah - p.ah);
+    const volts = D.rule("power").params.volts;
+    const setLive = (k, v, sub) => {
+      if (!live[k]) return;
+      live[k].value.textContent = v;
+      live[k].sub.textContent = sub;
+    };
+    setLive("amps", `${U.n(p.amps, 1)} A`, `peak ${U.n(sim.peakAmps, 1)} A, on layer ${sim.peakPoint.layer}`);
+    setLive("ah", `${U.n(ah, 0.1)} Ah`, `${U.n(ah * volts, 1)} Wh, of ${U.n(sim.ah, 0.1)} Ah for the whole pull`);
+    setLive("kw", `${U.n(p.elecKw, 0.1)} kW`, `${U.n(p.ropeKw, 0.01)} kW reaches the rope`);
+    setLive("time", `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`, `of ${Math.floor(sim.timeS / 60)}:${String(Math.round(sim.timeS % 60)).padStart(2, "0")} min`);
+    setLive("moved", `${U.n(x, 0.1)} m`, `of ${U.n(R.moveM, 0.1)} m · ${U.n(S.parts * x, 0.1)} m of rope wound in`);
     charts.forEach((c) => c.setPlayhead(x));
     play.x = x;
   }
@@ -598,7 +603,10 @@
     }
 
     // common sizes: a box per layer, outlined where this pull happens
-    const chips = D.commonWinchesLb.map((lb) => {
+    const sizesLb = D.commonWinchesLb.slice();
+    if (rating.ok && !sizesLb.some((lb) => Math.abs(rating.lb - lb) < 1)) sizesLb.push(Math.round(rating.lb));
+    sizesLb.sort((x, y) => x - y);
+    const chips = sizesLb.map((lb) => {
       const kg = C.lbToKg(lb);
       const boxes = dr.layers.map((l) => {
         const ok = kg * l.ratio >= need;
@@ -612,7 +620,37 @@
         el("span", { class: "layer-boxes" }, boxes));
     });
 
+    // your winch, first: what it is, whether it copes, and how it compares with the minimum
+    let yours;
+    if (rating.ok) {
+      const tone = { ok: "pass", close: "warn", short: "fail", rope: "fail", rolls: "info", idle: "info" }[cur.status];
+      const say = {
+        ok: `Copes with this pull (${lineWord})`,
+        close: "Close: covers the estimate, not the full 25% margin",
+        short: `Too small for this pull with a ${lineWord}`,
+        rope: "Strong enough, but the rope doesn't reach the anchor",
+        rolls: "Nothing to pull: it rolls downhill by itself",
+        idle: "",
+      }[cur.status];
+      const diffLb = rating.lb - C.kgToLb(sizing.recommendedKg);
+      yours = el("div", { class: "your-winch your-winch--" + tone },
+        el("div", { class: "yw-id" },
+          el("span", { class: "yw-label" }, "Your winch"),
+          el("strong", { class: "yw-name" }, (S.winch || "").trim()),
+          el("span", { class: "yw-rating" }, `${U.n(Math.round(rating.lb / 50) * 50, 1)} lb · ${U.kg(rating.kg)}`)),
+        el("div", { class: "yw-says" },
+          el("p", { class: "yw-verdict" }, U.statusIcon(tone), say),
+          el("p", { class: "yw-vs" }, diffLb >= -0.5
+            ? `Meets the ${U.lbMin(sizing.recommendedKg)} minimum rating below.`
+            : `${U.n(Math.ceil(-diffLb / 50) * 50, 1)} lb under the ${U.lbMin(sizing.recommendedKg)} minimum rating below.`)));
+    } else {
+      yours = el("div", { class: "your-winch your-winch--info" },
+        el("div", { class: "yw-id" }, el("span", { class: "yw-label" }, "Your winch"), el("strong", { class: "yw-name" }, "Not filled in")),
+        el("div", { class: "yw-says" }, el("p", { class: "yw-verdict" }, "Type your winch's model or rating on the picture at the top (\"EW9500\", \"4.5 t\") to check it here.")));
+    }
+
     $("sizes").replaceChildren(
+      yours,
       rule,
       mine,
       el("p", { class: "layers-title" }, `Common winch sizes, ${lineWord}`),

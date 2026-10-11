@@ -285,7 +285,7 @@
       // power: drawn = volts x amps; at the rope = rope pull (N) x rope speed (m/s)
       const elecKw = (volts * m.amps) / 1000;
       const ropeKw = (p.winchKg * G * (m.lineSpeedMMin / 60)) / 1000;
-      points.push({ x, t: timeS, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, onDrumM: onDrum, fractionOfRating: m.fractionOfRating, elecKw, ropeKw });
+      points.push({ x, t: timeS, ah, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, onDrumM: onDrum, fractionOfRating: m.fractionOfRating, elecKw, ropeKw });
     }
     const peak = points.reduce((a, b) => (b.amps > a.amps ? b : a), points[0]);
     const minMargin = points.reduce((m, pt) => Math.min(m, pt.availKg / pt.neededKg), Infinity);

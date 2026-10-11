@@ -6,6 +6,13 @@
   <title>Winch &amp; Recovery Sizing | PsyPhin</title>
   <meta name="description" content="How much pull it takes to winch your 4x4 out, what double and triple line pulls do, and what your winch, drum and battery go through. From a published recovery method, manufacturer data and engineering, with a source for every number.">
   <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://winching.psyphin.co.za/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://winching.psyphin.co.za/">
+  <meta property="og:title" content="Winch &amp; Recovery Sizing">
+  <meta property="og:description" content="How hard your winch has to pull to get you out, what a double or triple line does, and what your winch and battery go through, with a source for every number.">
+  <meta property="og:image" content="https://psyphin.co.za/assets/img/projects/winch-recovery-sizing.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#020203">
   <link rel="icon" href="favicon.ico" sizes="48x48">
   <link rel="icon" href="favicon-96x96.png" type="image/png" sizes="96x96">
@@ -96,14 +103,6 @@
             <output id="grade-out" for="gradeDeg"></output>
           </div>
         </div>
-        <div class="ctl ctl--angle">
-          <span class="ctl-label" id="angle-label">Rope angle <small>off the way it must move</small></span>
-          <div class="angle">
-            <span id="angle-view"></span>
-            <input type="range" id="ropeAngleDeg" min="0" max="45" step="1" aria-labelledby="angle-label">
-            <output id="angle-out" for="ropeAngleDeg"></output>
-          </div>
-        </div>
       </div>
 
       <div class="verdict" id="verdict" role="status" aria-live="polite"></div>
@@ -112,6 +111,14 @@
       <div class="part" id="rig-part">
         <p class="part-label">How the rope is run</p>
         <div class="picker" id="picker" role="radiogroup" aria-label="Number of lines"></div>
+        <div class="ctl ctl--angle rig-angle">
+          <span class="ctl-label" id="angle-label">Rope angle <small>off the way it must move</small></span>
+          <div class="angle">
+            <span id="angle-view"></span>
+            <input type="range" id="ropeAngleDeg" min="0" max="45" step="1" aria-labelledby="angle-label">
+            <output id="angle-out" for="ropeAngleDeg"></output>
+          </div>
+        </div>
         <div class="rig" id="rig">
           <label class="rig-field" id="f-anchor"><span class="visually-hidden">Distance from the winch to the anchor</span><input id="anchorM" type="number" inputmode="decimal" min="1" step="1"><span>m to anchor</span></label>
         </div>
@@ -153,8 +160,6 @@
           </div>
           <div class="play-main">
             <div id="chart-pull"></div>
-            <div id="chart-amps"></div>
-            <div id="chart-power"></div>
             <div class="play-bar">
               <button type="button" class="play-button" id="play">&#9654; Play the pull</button>
               <label class="mini-field">The vehicle must move <input id="moveM" type="number" inputmode="decimal" min="1" step="1" aria-label="Distance the vehicle must move"><span>m to be free</span></label>
