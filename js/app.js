@@ -306,9 +306,7 @@
   // ------------------------------------------------------------ verdict and balance
   function renderVerdict() {
     const { res, ang, cur, alts, rating, dr, mw, anchorM } = R;
-    // a model name reads as itself ("EW9500 can do it"); a bare rating as "A 4.5 t winch"
-    const typed = S.winch.trim();
-    const name = !rating.ok ? "Your winch" : /[a-z]{2,}/i.test(typed.replace(/\b(lbs?|kgs?|kn|tonnes?|tons?)\b/gi, "")) ? typed : `A ${typed} winch`;
+    const name = winchName();
     const need = cur.rig.winchKg;
     const lineWord = ["", " with a double line", " with a triple line"][S.parts - 1];
     const status = cur.status;
@@ -403,11 +401,10 @@
       b.className = "pick" + (st ? " pick--" + st : "");
     });
     const box = $("rig");
-    const d = V.rigging(cur.rig, box.clientWidth || 640);
+    const d = V.rigging(cur.rig, box.clientWidth || 640, R.ang.angleDeg);
     const old = box.querySelector(".rigging-svg");
     if (old) old.replaceWith(d.el);
     else box.prepend(d.el);
-    box.style.height = d.height + "px";
     box.classList.toggle("is-moving", cur.status === "ok" || cur.status === "close");
     $("f-anchor").style.left = d.inputAt.x + "px";
     $("f-anchor").style.top = d.inputAt.y + "px";
@@ -533,27 +530,69 @@
     $("play-part").classList.remove("is-playing");
   }
 
-  // ------------------------------------------------------------ winch size
+  // ------------------------------------------------------------ winch size, layer by layer
+  function winchName() {
+    // a model name reads as itself ("EW9500"); a bare rating as "A 4.5 t winch"
+    const typed = (S.winch || "").trim();
+    if (!R.rating.ok) return "Your winch";
+    return /[a-z]{2,}/i.test(typed.replace(/\b(lbs?|kgs?|kn|tonnes?|tons?)\b/gi, "")) ? typed : `A ${typed} winch`;
+  }
+
   function renderSizes() {
-    const { sizing, alts, rating } = R;
+    const { sizing, rating, dr, cur } = R;
+    const need = cur.rig.winchKg;
+    const from = cur.sim ? cur.sim.startLayer : cur.startLayer.n;
+    const to = cur.sim ? cur.sim.endLayer : cur.startLayer.n;
+    const used = (n) => n >= from && n <= to;
+    const lineWord = ["single line", "double line", "triple line"][S.parts - 1];
+    const usedText = from === to ? `layer ${from}` : `layers ${from} to ${to}`;
+
+    // the minimum rating, and where it comes from
+    const rule = el("div", { class: "size-rule" },
+      el("div", { class: "size-fig" }, el("span", { class: "size-big" }, U.lbMin(sizing.recommendedKg)), el("span", { class: "size-unit" }, `minimum rating · ${U.kgMin(sizing.recommendedKg)}`)),
+      el("p", null, `The bigger of two figures: WARN's rule of 1.5 × the vehicle's mass (${U.lbMin(sizing.warnKg)}), and what this pull needs (${U.lbMin(sizing.neededKg)}: the ${U.kg(need)} rope pull on layer ${cur.startLayer.n}, where a winch gives ${Math.round(cur.startLayer.ratio * 100)}% of its rating).`));
+
+    // your winch, layer by layer, against the pull needed
+    let mine = null;
+    if (rating.ok) {
+      const max = Math.max(rating.kg, need) * 1.06;
+      mine = el("div", { class: "layers" },
+        el("p", { class: "layers-title" }, `${winchName()}, layer by layer`),
+        dr.layers.map((l) => {
+          const kg = rating.kg * l.ratio;
+          const ok = kg >= need;
+          return el("div", { class: "layer-row" + (used(l.n) ? " is-used" : "") },
+            el("span", { class: "layer-name" }, `Layer ${l.n}`, el("small", null, l.n === 1 ? "bare drum" : `${l.n - 1} under it`)),
+            el("div", { class: "layer-bar" },
+              el("span", { class: "layer-fill " + (ok ? "is-ok" : "is-short"), style: `width:${(kg / max) * 100}%` }),
+              el("span", { class: "layer-need", style: `left:${(need / max) * 100}%` })),
+            el("span", { class: "layer-val layer-val--" + (ok ? "pass" : "fail") }, U.statusIcon(ok ? "pass" : "fail"), U.kg(kg)),
+            el("span", { class: "layer-tag" }, used(l.n) ? "used in this pull" : ""));
+        }),
+        el("p", { class: "hint" }, `The white line is the ${U.kg(need)} this pull needs in the rope (${lineWord}, 25% margin included). A winch is rated on layer 1, the bare drum; every layer of rope wound on top makes the drum fatter and the pull weaker. This pull uses ${usedText}: the rope starts there and winds on as the vehicle comes out.`));
+    }
+
+    // common sizes: a box per layer, outlined where this pull happens
     const chips = D.commonWinchesLb.map((lb) => {
       const kg = C.lbToKg(lb);
-      const marks = alts.map((a) => {
-        const ok = kg * a.startLayer.ratio >= a.rig.winchKg;
-        return el("span", { class: "size-mark size-mark--" + (ok ? "pass" : "fail"), title: `${["Single", "Double", "Triple"][a.parts - 1]} line: ${ok ? "enough" : "not enough"}` }, String(a.parts));
+      const boxes = dr.layers.map((l) => {
+        const ok = kg * l.ratio >= need;
+        return el("span", { class: "layer-box layer-box--" + (ok ? "pass" : "fail") + (used(l.n) ? " is-used" : ""), title: `Layer ${l.n}: ${U.kg(kg * l.ratio)} ${ok ? "≥" : "<"} ${U.kg(need)}` }, String(l.n));
       });
-      const mine = rating.ok && Math.abs(rating.lb - lb) < 1;
-      return el("li", { class: "size" + (kg >= sizing.warnKg ? " size--warn-ok" : "") + (mine ? " size--mine" : "") },
-        el("strong", null, U.n(lb, 1) + " lb"), el("small", null, U.kg(kg)), el("span", { class: "size-marks" }, marks));
+      const copes = dr.layers.filter((l) => used(l.n)).every((l) => kg * l.ratio >= need);
+      const mineChip = rating.ok && Math.abs(rating.lb - lb) < 1;
+      return el("li", { class: "size" + (copes ? " size--ok" : " size--no") + (mineChip ? " size--mine" : "") },
+        el("span", { class: "size-head" }, el("strong", null, U.n(lb, 1) + " lb"), el("span", { class: "size-say" }, copes ? "copes" : "too small")),
+        el("small", null, U.kg(kg) + (kg >= sizing.warnKg ? " · meets WARN's rule" : "")),
+        el("span", { class: "layer-boxes" }, boxes));
     });
+
     $("sizes").replaceChildren(
-      el("div", { class: "size-rule" },
-        el("div", { class: "size-fig" }, el("span", { class: "size-big" }, U.lbMin(sizing.recommendedKg)), el("span", { class: "size-unit" }, `minimum rating · ${U.kgMin(sizing.recommendedKg)}`)),
-        el("p", null, sizing.neededKg > sizing.warnKg
-          ? `This pull needs more than WARN's rule of 1.5 × the vehicle's mass (${U.lbMin(sizing.warnKg)}), so the pull sets the size. More lines bring it down.`
-          : `WARN's rule, 1.5 × the vehicle's mass, sets the size. This pull on its own needs ${U.lbMin(sizing.neededKg)} on the layer it starts on.`)),
+      rule,
+      mine,
+      el("p", { class: "layers-title" }, `Common winch sizes, ${lineWord}`),
       el("ul", { class: "sizes" }, chips),
-      el("p", { class: "hint" }, "Common winch sizes. 1, 2 and 3: whether each copes with a single, double or triple line for this pull, on the layer it starts on. Outlined: meets WARN's rule.")
+      el("p", { class: "hint" }, `Each numbered box is a layer of rope on the drum: green has enough pull for this ${lineWord}, red doesn't. Outlined boxes are the layers this pull uses (${usedText}). A winch copes when all of them are green.`)
     );
   }
 

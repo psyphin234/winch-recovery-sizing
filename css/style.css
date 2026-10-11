@@ -2324,7 +2324,6 @@ select:focus {
 /* rigging, top view */
 .rig {
   position: relative;
-  transition: height 0.3s;
 }
 
 .rigging-svg { display: block; max-width: 100%; height: auto; }
@@ -2340,6 +2339,10 @@ select:focus {
 .rg-label { fill: var(--text); font-family: var(--font-body); font-size: 14px; font-weight: 600; }
 .rg-value { fill: var(--text); font-family: var(--font-display); font-weight: 700; font-size: 19px; }
 .rg-seg, .rg-blocklabel { fill: var(--text-muted); font-family: var(--font-body); font-size: 13px; }
+.rg-path { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.rg-path-head { fill: var(--text-muted); }
+.rg-arc { fill: none; stroke: var(--series-4); stroke-width: 2.2; }
+.rg-angle { fill: var(--series-4); font-family: var(--font-display); font-weight: 700; font-size: 17px; }
 
 .rg-sheave { transform-box: fill-box; transform-origin: center; }
 .rig.is-moving .rg-rope.flow-l { stroke-dasharray: 10 6; animation: rg-left 0.8s linear infinite; }
@@ -2420,22 +2423,27 @@ select:focus {
 /* ------------------------------------------------------------ the pull, metre by metre */
 .play {
   display: grid;
-  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-}
-
-@media (max-width: 760px) {
-  .play { grid-template-columns: 1fr; }
+  gap: 16px;
 }
 
 .play-side {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 250px);
   gap: 14px;
+  align-items: stretch;
 }
 
-@media (max-width: 760px) and (min-width: 480px) {
-  .play-side { grid-template-columns: 1fr 1fr; }
+@media (max-width: 640px) {
+  .play-side { grid-template-columns: 1fr; }
+}
+
+.box-title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .drum-box,
@@ -2447,9 +2455,37 @@ select:focus {
   border: 1px solid var(--border);
 }
 
-.drum-svg { display: block; width: 100%; height: auto; }
-.dm-core { fill: #4b5560; }
-.dm-flange { fill: #6f7a85; }
+.drum-svg { display: block; width: 100%; max-width: 640px; margin: 0 auto; height: auto; }
+.wn-base { fill: #3b4652; }
+.wn-motor { fill: #2a3139; stroke: #6f7a85; stroke-width: 1.5; }
+.wn-rib { stroke: #4b5560; stroke-width: 2; }
+.wn-gear { fill: #2a3139; stroke: #6f7a85; stroke-width: 1.5; }
+.wn-knob { fill: #d1a54a; }
+.wn-flange { fill: #8a96a3; }
+.wn-barrel { fill: #4b5560; }
+.wn-axis { stroke: #2a3139; stroke-width: 1; stroke-dasharray: 4 3; }
+.wn-tie { fill: #6f7a85; }
+.wn-exit { fill: none; stroke: #e6ebef; stroke-width: 2.2; stroke-linecap: round; }
+.wn-text { fill: var(--text-muted); font-family: var(--font-body); font-size: 10.5px; }
+.wn-text--exit { fill: var(--text); font-weight: 600; }
+
+.drum-legend {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.drum-legend li { display: flex; align-items: center; }
+.dm-key { border-radius: 50%; }
+.dm-key--min { background: var(--series-neutral); }
+.dm-key--start { background: var(--series-1); }
+.dm-key--wound { background: color-mix(in srgb, var(--series-1) 55%, #e6ebef); }
+.dm-key--out { box-shadow: inset 0 0 0 1px rgba(154, 164, 174, 0.5); }
 .dm-wrap { fill: transparent; stroke: rgba(154, 164, 174, 0.18); stroke-width: 1; transition: fill 0.2s; }
 .dm-wrap.is-min { fill: var(--series-neutral); stroke: none; }
 .dm-wrap.is-start { fill: var(--series-1); stroke: none; }
@@ -2655,6 +2691,96 @@ select:focus {
 
 .size-mark--pass { --tone: var(--pass); }
 .size-mark--fail { --tone: var(--fail); background: transparent; color: var(--fail); box-shadow: inset 0 0 0 1.5px var(--fail); }
+
+.layers-title {
+  margin: 18px 0 8px;
+  font-weight: 600;
+}
+
+.layers { margin-top: 4px; }
+
+.layer-row {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr) 7.5em 9em;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.layer-row.is-used { background: rgba(63, 182, 255, 0.08); box-shadow: inset 3px 0 0 var(--accent); }
+
+.layer-name { font-weight: 600; font-size: 0.9rem; line-height: 1.2; }
+.layer-name small { display: block; font-weight: 400; font-size: 0.72rem; color: var(--text-muted); }
+
+.layer-bar {
+  position: relative;
+  height: 16px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.layer-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.layer-fill.is-ok { background: color-mix(in srgb, var(--pass) 75%, var(--surface)); }
+.layer-fill.is-short { background: color-mix(in srgb, var(--fail) 75%, var(--surface)); }
+
+.layer-need {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  background: #e6ebef;
+  transition: left 0.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.layer-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.layer-val .status-icon { width: 18px; height: 18px; font-size: 0.65rem; }
+.layer-val--pass { --tone: var(--pass); }
+.layer-val--fail { --tone: var(--fail); }
+.layer-tag { font-size: 0.75rem; color: var(--accent); }
+
+@media (max-width: 560px) {
+  .layer-row { grid-template-columns: 5.2em minmax(0, 1fr) auto; }
+  .layer-tag { grid-column: 1 / -1; margin-top: -4px; }
+  .layer-tag:empty { display: none; }
+}
+
+.size-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 6px; }
+.size-say { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.size--ok .size-say { color: var(--pass); }
+.size--no .size-say { color: var(--fail); }
+.size--no { opacity: 0.85; }
+
+.layer-boxes { display: flex; gap: 4px; margin-top: 5px; }
+
+.layer-box {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.layer-box--pass { background: color-mix(in srgb, var(--pass) 30%, var(--surface-2)); color: var(--pass); }
+.layer-box--fail { background: color-mix(in srgb, var(--fail) 22%, var(--surface-2)); color: var(--fail); }
+.layer-box.is-used { box-shadow: 0 0 0 2px var(--text); }
 
 #stage-sources { padding: 0 16px 16px; }
 

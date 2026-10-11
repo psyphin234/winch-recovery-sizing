@@ -122,7 +122,14 @@
         <div class="play">
           <div class="play-side">
             <figure class="drum-box">
+              <p class="box-title">Your winch, the drum cut through</p>
               <div id="drum"></div>
+              <ul class="drum-legend">
+                <li><span class="swatch dm-key dm-key--min" aria-hidden="true"></span>must stay on the drum</li>
+                <li><span class="swatch dm-key dm-key--start" aria-hidden="true"></span>on the drum at the start</li>
+                <li><span class="swatch dm-key dm-key--wound" aria-hidden="true"></span>wound in during the pull</li>
+                <li><span class="swatch dm-key dm-key--out" aria-hidden="true"></span>paid out</li>
+              </ul>
               <figcaption>
                 <span id="drum-layer" class="drum-layer"></span>
                 <span class="drum-rope">
@@ -136,6 +143,7 @@
               </figcaption>
             </figure>
             <figure class="gauge-box">
+              <p class="box-title">Current the winch draws</p>
               <div id="gauge"></div>
               <figcaption><strong id="amps-now">0 A</strong><span>current draw</span></figcaption>
             </figure>

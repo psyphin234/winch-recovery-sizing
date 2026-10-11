@@ -257,95 +257,168 @@
   }
 
   // ------------------------------------------------------------ rigging (top view)
-  // Drawn at the panel's own width (1 SVG unit = 1 CSS px), so text stays readable on phones.
-  function rigging(rig, width) {
+  /*
+   * Drawn at the panel's own width (1 SVG unit = 1 CSS px), so text stays
+   * readable on phones. With a rope angle, everything from the vehicle's front
+   * outwards is sheared upwards (P below), so the ropes leave at the real angle
+   * while blocks stay round and text stays level. The rope is drawn shorter at
+   * steep angles so the picture doesn't grow too tall; the angle is true.
+   */
+  function rigging(rig, width, angleDeg) {
     const n = rig.parts;
     const W = Math.max(300, Math.min(900, Math.round(width || 640)));
     const narrow = W < 480;
-    const top = 58;
+    const deg = Math.max(0, Math.min(45, angleDeg || 0));
+    const tanA = Math.tan((deg * Math.PI) / 180);
     const gap = 46;
-    const H = top + (n - 1) * gap + 70;
     const xVeh = narrow ? 92 : 150; // vehicle front
     const treeR = narrow ? 20 : 24;
-    const treeX = W - treeR - 8;
-    const xAnc = W - (narrow ? 84 : 120); // anchor side blocks
+    const treeOff = narrow ? 56 : 88; // anchor-side blocks to the tree
+    const fullSpan = W - (narrow ? 84 : 120) - xVeh;
+    const maxRise = narrow ? 150 : 200;
+    const span = tanA > 0.005 ? Math.max(Math.min(fullSpan, maxRise / tanA - treeOff - treeR), 70) : fullSpan;
+    const rise = (span + treeOff + treeR) * tanA;
+    const angled = deg >= 0.5;
+    const top = 34 + rise + (angled ? 44 : 0); // room above the tree for its label
+    const xAnc = xVeh + span;
+    const treeX = xAnc + treeOff;
     const yOf = (k) => top + k * gap;
+    const H = top + (n - 1) * gap + 74;
+    const P = (x, y) => ({ x, y: y - (x - xVeh) * tanA });
 
     const g = svg("g", null);
     const vy = yOf(0) - 26;
     const vh = Math.max(52, (n - 1) * gap + 52);
+    const yMid = yOf(0) + ((n - 1) * gap) / 2;
+
+    // the way the vehicle has to move, and the angle the rope makes with it,
+    // measured where the bottom rope leaves the vehicle
+    if (angled) {
+      const x0 = xVeh + 8;
+      const y0 = yOf(n - 1);
+      g.appendChild(svg("line", { class: "rg-path", x1: x0, y1: y0, x2: W - 14, y2: y0 }));
+      g.appendChild(svg("path", { class: "rg-path-head", d: `M ${W - 4} ${y0} l -12 -6 v 12 Z` }));
+      g.appendChild(svg("text", { class: "rg-seg", x: W - 4, y: y0 + 20, "text-anchor": "end" }, narrow ? "way it moves" : "the way it must move"));
+      const R = narrow ? 64 : 92;
+      const a = (deg * Math.PI) / 180;
+      g.appendChild(svg("path", { class: "rg-arc", d: `M ${x0 + R} ${y0} A ${R} ${R} 0 0 0 ${x0 + R * Math.cos(a)} ${y0 - R * Math.sin(a)}` }));
+      g.appendChild(svg("text", { class: "rg-angle", x: x0 + R + 6, y: y0 - 6 }, `${Math.round(deg)}°`));
+    }
+
     g.appendChild(svg("rect", { class: "rg-vehicle", x: 8, y: vy, width: xVeh - 20, height: vh, rx: 10 }));
     g.appendChild(svg("text", { class: "rg-label", x: 8 + (xVeh - 20) / 2, y: n > 2 ? vy + 22 : vy + vh / 2 + 6, "text-anchor": "middle" }, "Vehicle"));
     g.appendChild(svg("rect", { class: "rg-winch", x: xVeh - 18, y: yOf(0) - 9, width: 16, height: 18, rx: 3 }));
-    const ty = yOf(0) + ((n - 1) * gap) / 2;
+    const tree = P(treeX, yMid);
 
     for (let k = 0; k < n; k++) {
       const y = yOf(k);
-      const x1 = k === 0 ? xVeh - 2 : xVeh + 8;
-      const x2 = k === n - 1 && n % 2 === 1 ? xAnc + 10 : xAnc;
+      const a = P(k === 0 ? xVeh - 2 : xVeh + 8, y);
+      const b = P(k === n - 1 && n % 2 === 1 ? xAnc + 10 : xAnc, y);
       // the rope runs back toward the winch: leftwards on even lengths, rightwards on odd ones
-      g.appendChild(svg("line", { class: "rg-rope " + (k % 2 ? "flow-r" : "flow-l"), x1, y1: y, x2, y2: y }));
-      g.appendChild(svg("text", { class: "rg-seg", x: xVeh + (xAnc - xVeh) * 0.3, y: y - 7, "text-anchor": "middle" }, U.kg(rig.segments[k])));
+      g.appendChild(svg("line", { class: "rg-rope " + (k % 2 ? "flow-r" : "flow-l"), x1: a.x, y1: a.y, x2: b.x, y2: b.y }));
+      const lab = P(xVeh + span * 0.3, y);
+      g.appendChild(svg("text", { class: "rg-seg", x: lab.x, y: lab.y - 7, "text-anchor": "middle" }, U.kg(rig.segments[k])));
     }
     rig.points.forEach((p, i) => {
       if (p.kind === "block") {
         const j = i + 1;
-        const yA = yOf(j - 1);
-        const yB = yOf(j);
         const x = p.at === "anchor" ? xAnc : xVeh + 8;
-        const cy = (yA + yB) / 2;
-        const rr = (yB - yA) / 2;
-        g.appendChild(svg("path", { class: "rg-rope", d: `M ${x} ${yA} A ${rr} ${rr} 0 0 ${p.at === "anchor" ? 1 : 0} ${x} ${yB}`, fill: "none" }));
+        const A = P(x, yOf(j - 1));
+        const B = P(x, yOf(j));
+        const rr = (B.y - A.y) / 2;
         const bx = p.at === "anchor" ? x + rr : x - rr;
-        if (p.at === "anchor") g.appendChild(svg("line", { class: "rg-strap", x1: bx + 9, y1: cy, x2: treeX, y2: ty }));
+        const cy = (A.y + B.y) / 2;
+        g.appendChild(svg("path", { class: "rg-rope", d: `M ${A.x} ${A.y} A ${rr} ${rr} 0 0 ${p.at === "anchor" ? 1 : 0} ${B.x} ${B.y}`, fill: "none" }));
+        if (p.at === "anchor") g.appendChild(svg("line", { class: "rg-strap", x1: bx + 9, y1: cy, x2: tree.x, y2: tree.y }));
         g.appendChild(svg("g", { class: "rg-sheave" },
           svg("circle", { class: "rg-block", cx: bx, cy, r: 9 }),
           svg("line", { class: "rg-axle", x1: bx - 5, y1: cy, x2: bx + 5, y2: cy })));
-        // label to the left of the block: between the ropes it joins (anchor side) or over the vehicle
-        g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
+        // label: under an anchor-side block (clear of the ropes, even when they slope), over the vehicle for a vehicle-side one
+        if (p.at === "anchor") g.appendChild(svg("text", { class: "rg-blocklabel", x: bx, y: B.y + 22, "text-anchor": "middle" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
+        else g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
+      } else if (p.at === "vehicle") {
+        const e = P(xVeh + 8, yOf(n - 1));
+        g.appendChild(svg("circle", { class: "rg-end", cx: e.x, cy: e.y, r: 5 }));
       } else {
-        const y = yOf(n - 1);
-        if (p.at === "vehicle") {
-          g.appendChild(svg("circle", { class: "rg-end", cx: xVeh + 8, cy: y, r: 5 }));
-        } else {
-          g.appendChild(svg("line", { class: "rg-strap", x1: xAnc + 10, y1: y, x2: treeX, y2: ty }));
-          g.appendChild(svg("circle", { class: "rg-end", cx: xAnc + 10, cy: y, r: 5 }));
-        }
+        const e = P(xAnc + 10, yOf(n - 1));
+        g.appendChild(svg("line", { class: "rg-strap", x1: e.x, y1: e.y, x2: tree.x, y2: tree.y }));
+        g.appendChild(svg("circle", { class: "rg-end", cx: e.x, cy: e.y, r: 5 }));
       }
     });
-    g.appendChild(svg("circle", { class: "rg-tree", cx: treeX, cy: ty, r: treeR }));
-    g.appendChild(svg("text", { class: "rg-label", x: W - 4, y: yOf(n - 1) + 34, "text-anchor": "end" }, "Anchor"));
-    g.appendChild(svg("text", { class: "rg-value", x: W - 4, y: yOf(n - 1) + 56, "text-anchor": "end" }, U.kg(rig.anchorKg)));
-    g.appendChild(svg("text", { class: "rg-label", x: xVeh, y: top - 34, "text-anchor": "start" }, "Winch pulls " + U.kg(rig.winchKg)));
+    g.appendChild(svg("circle", { class: "rg-tree", cx: tree.x, cy: tree.y, r: treeR }));
+    // anchor load: below the tree when the rope runs straight, above it when it's angled (clear of the ropes)
+    const lx = Math.min(W - 4, tree.x + treeR + 6);
+    const ly = angled ? tree.y - treeR - 30 : tree.y + treeR + 20;
+    g.appendChild(svg("text", { class: "rg-label", x: lx, y: ly, "text-anchor": "end" }, "Anchor"));
+    g.appendChild(svg("text", { class: "rg-value", x: lx, y: ly + 21, "text-anchor": "end" }, U.kg(rig.anchorKg)));
+    g.appendChild(svg("text", { class: "rg-label", x: 8, y: vy + vh + 22, "text-anchor": "start" }, "Winch pulls " + U.kg(rig.winchKg)));
 
-    const caption = n === 1
+    const caption = (n === 1
       ? "Single line: the winch pulls the full load, and the anchor takes the same."
-      : `${n} lengths of rope pull on the vehicle. Each block loses 8% to friction (LEEA), so the winch pulls ${U.kg(rig.winchKg)}, not ${U.kg(rig.anchorKg / n)}. The anchor still takes the full ${U.kg(rig.anchorKg)}.`;
+      : `${n} lengths of rope pull on the vehicle. Each block loses 8% to friction (LEEA), so the winch pulls ${U.kg(rig.winchKg)}, not ${U.kg(rig.anchorKg / n)}. The anchor still takes the full ${U.kg(rig.anchorKg)}.`) +
+      (angled ? ` The rope is ${Math.round(deg)}° off the way the vehicle must move.` : "");
+    const at = P(xVeh + span * 0.66, yOf(0));
     return {
       el: svg("svg", { class: "rigging-svg", viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": caption }, g),
       caption,
       // where the anchor-distance input sits: on the top rope, nearer the anchor
-      inputAt: { x: xVeh + (xAnc - xVeh) * 0.66, y: yOf(0) },
+      inputAt: at,
       width: W,
       height: H,
     };
   }
 
-  // ------------------------------------------------------------ drum, one circle per wrap
+  // ------------------------------------------------------------ the winch, cut through the drum
+  /*
+   * A winch seen from the front: motor, drum between its flanges, gearbox, the
+   * tie bar over the top, feet below. The drum is cut through, so each wrap of
+   * rope shows as a circle, stacked in layers on the drum. set() colours the
+   * wraps and moves the rope's exit to the outermost wrap.
+   */
   function drum(dr, minWrapsM) {
     const wraps = dr.wraps;
     const pitch = Math.max(7, Math.min(12, 300 / wraps));
     const r = pitch / 2 - 0.6;
     const layers = dr.layers.length;
     const rowH = pitch * 0.88;
-    const W = wraps * pitch + 32 + pitch / 2;
     const coreH = 16;
-    const H = layers * rowH + coreH + 26;
-    const baseY = H - coreH - 6;
-    const g = svg("g", null,
-      svg("rect", { x: 16, y: baseY, width: wraps * pitch + pitch / 2, height: coreH, rx: 3, class: "dm-core" }),
-      svg("rect", { x: 6, y: baseY - layers * rowH - 8, width: 10, height: layers * rowH + coreH + 8, rx: 3, class: "dm-flange" }),
-      svg("rect", { x: 16 + wraps * pitch + pitch / 2, y: baseY - layers * rowH - 8, width: 10, height: layers * rowH + coreH + 8, rx: 3, class: "dm-flange" }));
+    const motorW = 62;
+    const gearW = 50;
+    const fl = 9; // flange thickness
+    const xMotor = 4;
+    const xFlL = xMotor + motorW + 4;
+    const x0 = xFlL + fl; // drum barrel starts
+    const drumW = wraps * pitch + pitch / 2;
+    const xFlR = x0 + drumW;
+    const xGear = xFlR + fl + 4;
+    const W = xGear + gearW + 4;
+    const topPad = 34; // room for the rope leaving and its label
+    const stackH = layers * rowH;
+    const flTop = topPad + 6;
+    const baseY = flTop + 10 + stackH; // top of the barrel
+    const axisY = baseY + coreH / 2;
+    const flH = (axisY - flTop) * 2;
+    const hh = Math.max(46, coreH + 30);
+    const feetY = Math.max(axisY + hh / 2, flTop + flH) + 2;
+    const H = feetY + 26;
+
+    const g = svg("g", null);
+    // feet and base plate
+    g.appendChild(svg("rect", { x: xMotor + 6, y: feetY, width: W - xMotor - 16, height: 5, rx: 2, class: "wn-base" }));
+    // motor: a ribbed cylinder
+    g.appendChild(svg("rect", { x: xMotor, y: axisY - hh / 2, width: motorW, height: hh, rx: 10, class: "wn-motor" }));
+    for (let i = 1; i < 6; i++) g.appendChild(svg("line", { x1: xMotor + i * (motorW / 6), y1: axisY - hh / 2 + 6, x2: xMotor + i * (motorW / 6), y2: axisY + hh / 2 - 6, class: "wn-rib" }));
+    // gearbox / clutch housing
+    g.appendChild(svg("rect", { x: xGear, y: axisY - hh / 2, width: gearW, height: hh, rx: 6, class: "wn-gear" }));
+    g.appendChild(svg("circle", { cx: xGear + gearW / 2, cy: axisY - hh / 2 + 11, r: 5, class: "wn-knob" }));
+    // flanges (end plates) and the barrel
+    g.appendChild(svg("rect", { x: xFlL, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange" }));
+    g.appendChild(svg("rect", { x: xFlR, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange" }));
+    g.appendChild(svg("rect", { x: x0, y: baseY, width: drumW, height: coreH, class: "wn-barrel" }));
+    g.appendChild(svg("line", { x1: x0, y1: axisY, x2: x0 + drumW, y2: axisY, class: "wn-axis" }));
+    // tie bar across the top, from motor to gearbox
+    g.appendChild(svg("rect", { x: xMotor + 8, y: flTop - 9, width: xGear + gearW - xMotor - 16, height: 5, rx: 2.5, class: "wn-tie" }));
+
     const circles = [];
     let cum = 0;
     dr.layers.forEach((l, li) => {
@@ -353,22 +426,37 @@
       for (let k = 0; k < wraps; k++) {
         // level wind: odd layers go left to right, even layers back, nested half a wrap over
         const idx = li % 2 === 0 ? k : wraps - 1 - k;
-        const cx = 16 + pitch / 2 + idx * pitch + (li % 2 ? pitch / 2 : 0);
+        const cx = x0 + pitch / 2 + idx * pitch + (li % 2 ? pitch / 2 : 0);
         const cy = baseY - pitch / 2 - li * rowH;
         cum += wrapLen;
         const c = svg("circle", { cx, cy, r, class: "dm-wrap" });
-        circles.push({ c, end: cum, layer: l.n });
+        circles.push({ c, end: cum, cx, cy });
         g.appendChild(c);
       }
     });
-    const node = svg("svg", { class: "drum-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Cross-section of the winch drum: one circle per wrap of rope" }, g);
+
+    // the rope leaving the outermost wrap, off to the anchor
+    const exit = svg("path", { class: "wn-exit", d: "" });
+    const exitLabel = svg("text", { class: "wn-text wn-text--exit", x: W - 6, y: 14, "text-anchor": "end" }, "to the anchor →");
+    g.append(exit, exitLabel);
+    // names of the parts
+    g.appendChild(svg("text", { class: "wn-text", x: xMotor + motorW / 2, y: H - 6, "text-anchor": "middle" }, "motor"));
+    g.appendChild(svg("text", { class: "wn-text", x: x0 + drumW / 2, y: H - 6, "text-anchor": "middle" }, "drum, cut through: one circle per wrap"));
+    g.appendChild(svg("text", { class: "wn-text", x: xGear + gearW / 2, y: H - 6, "text-anchor": "middle" }, "gearbox"));
+
+    const node = svg("svg", { class: "drum-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "The winch from the front, its drum cut through: each circle is one wrap of rope, stacked in layers" }, g);
     return {
       el: node,
       set(onDrumM, startOnDrumM) {
+        let last = null;
         circles.forEach((w) => {
-          const cls = w.end <= minWrapsM + 1e-6 ? "dm-wrap is-min" : w.end <= startOnDrumM + 1e-6 ? "dm-wrap is-start" : w.end <= onDrumM + 1e-6 ? "dm-wrap is-wound" : "dm-wrap";
+          const on = w.end <= onDrumM + 1e-6;
+          const cls = w.end <= minWrapsM + 1e-6 ? "dm-wrap is-min" : w.end <= startOnDrumM + 1e-6 ? "dm-wrap is-start" : on ? "dm-wrap is-wound" : "dm-wrap";
           if (w.c.getAttribute("class") !== cls) w.c.setAttribute("class", cls);
+          if (on) last = w;
         });
+        const from = last || { cx: x0 + pitch / 2, cy: baseY - pitch / 2 };
+        exit.setAttribute("d", `M ${from.cx} ${from.cy - r} C ${from.cx} ${flTop - 18}, ${W - 60} ${flTop - 22}, ${W - 6} 22`);
       },
     };
   }
