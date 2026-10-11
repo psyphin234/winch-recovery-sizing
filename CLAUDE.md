@@ -1,70 +1,79 @@
 # Winch & Recovery Sizing
 
-Static calculator for 4x4 winch recoveries, part of the PsyPhin site: the pull it takes to recover a stuck vehicle, the winch size, what snatch blocks do, how a real winch copes as rope piles onto the drum, what it asks of the battery and wiring, and the strap, shackle and block ratings to match. Started 2026-10-11.
+Static calculator for 4x4 **winching**, part of the PsyPhin site: the pull it takes to winch a stuck vehicle out, what double and triple lines do, how a winch copes as rope piles onto the drum, the current it draws along the way, the rigging ratings, and the winch size. Started 2026-10-11; redesigned the same day (owner: "a lot less complicated looking", inputs on the diagrams, animated, one page).
 
-Repo `psyphin234/winch-recovery-sizing` (public), GitHub Pages from `main` / root. Push to `main` to deploy; check with `gh api repos/psyphin234/winch-recovery-sizing/pages/builds/latest`. No card on psyphin.co.za yet.
+**Winching only.** Straps and kinetic recovery are for a separate page the owner will do later. Their rules (Australian strap standard, Bushranger's strap sheet, the kinetic spring model, kinetic rope stretch), and the battery/cable electrics (SAE J537, IEC 60028), were removed on 2026-10-11 and are in git history (commit 8565449 and before) to reuse.
+
+Repo `psyphin234/winch-recovery-sizing` (public), GitHub Pages from `main` / root. Push to `main` to deploy; check with `gh api repos/psyphin234/winch-recovery-sizing/pages/builds/latest`. Card on psyphin.co.za (Tools, amber "Under construction") since 2026-10-11.
 
 **Address:** until its subdomain is set up it's served at `https://psyphin.co.za/winch-recovery-sizing/` (inherited from the psyphin234.github.io user site). The planned address is **https://winching.psyphin.co.za/**. To switch (the pattern in the psyphin.co.za CLAUDE.md):
 1. Owner adds an Afrihost CNAME `winching.psyphin.co.za` → `psyphin234.github.io` (the form wants the full hostname). Check: `nslookup winching.psyphin.co.za 8.8.8.8`.
 2. Only once that resolves: set the custom domain (`gh api -X PUT repos/psyphin234/winch-recovery-sizing/pages -f cname=winching.psyphin.co.za`), then `git pull` the `CNAME` file GitHub commits. Doing this before the DNS exists would redirect the working address to one that doesn't resolve.
-3. Once the certificate is issued, turn on Enforce HTTPS (`-F https_enforced=true`), add `<link rel="canonical">` and `og:url` for the new address to both pages, and update the psyphin.co.za CLAUDE.md DNS list (and its runbook).
+3. Once the certificate is issued, turn on Enforce HTTPS (`-F https_enforced=true`), add `<link rel="canonical">` and `og:url` for the new address to both pages, change the card's `url` in psyphin.co.za's `projects.js`, and update the psyphin.co.za CLAUDE.md DNS list (and its runbook).
 
-Plain HTML/CSS/vanilla JS, classic scripts (no modules, no build step), so `index.html` opens straight from disk. Everything runs in the browser; inputs are only kept in the visitor's own `localStorage`.
+Plain HTML/CSS/vanilla JS, classic scripts (no modules, no build step), so `index.html` opens straight from disk. Everything runs in the browser; inputs are only kept in the visitor's own `localStorage` (key `winch-calc-v2`).
 
 **Status: UNDER CONSTRUCTION.** Both pages carry the amber `.construction` banner and `<meta name="robots" content="noindex">`. Keep both until the owner says otherwise.
 
 ## Source policy (owner's rule, non-negotiable)
 
 - **Engineering, standards, manufacturers' published data and best practice, and published recovery methods only. No broscience:** no forum, club, retailer-blog or "everyone says" figures.
-- Every number lives in `js/data.js` as a rule's `params`, next to its sources, the exact words quoted from the source (`quote`) and a `checked` date. `calc.js`, `app.js` and the HTML read them from there; don't hard-code 1.5, 8%, 650 CCA etc.
-- Where nothing citable exists, add a `gaps` entry and say "no published figure" on the page instead of guessing. Current gaps: snow and rock ground factors (the user picks the nearest published ground, labelled as their choice), winch rope MBS-to-rating ratio, duty cycle, alternator output at idle.
-- Rule `category` drives the tag: method | maker | standard | engineering | calculation. **calculation** = this site's own physics (statics, energy, Ohm's law); it must cite `physics` and say so where shown.
-- Before adding a claim, read the source itself. Things checked and dropped on 2026-10-11: "a strap rated over 3x GVM won't stretch enough" (not in anything readable; removed), and an early "within 10% of measured" claim for I4WDTA (true only for the four bogged tests; their slight-incline test came out ~30% under, which the gradient rule now says).
-- Kinetic rope/strap peak force is an idealised spring model (`kinetic()` in calc.js); the page labels it "Simplified physics, not a measurement". Keep that label.
+- Every number lives in `js/data.js` as a rule's `params`, next to its sources, the exact words quoted from the source (`quote`) and a `checked` date. `calc.js`, `app.js` and the HTML read them from there; don't hard-code 1.5, 8%, 25% etc.
+- Where nothing citable exists, add a `gaps` entry and say "no published figure" on the page instead of guessing. Current gaps: snow and rock ground factors (the user picks the nearest published ground, labelled as their choice), suction, duty cycle.
+- Rule `category` drives the tag: method | maker | engineering | calculation. **calculation** = this site's own physics; it must cite `physics` and say so where shown.
+- Before adding a claim, read the source itself. Checked and dropped on 2026-10-11: "a strap rated over 3x GVM won't stretch enough" (unverifiable), WreckMaster's "body mire 1.5x" (only quoted second-hand on forums, so "bogged to the chassis" uses I4WDTA instead), and an early "within 10% of measured" claim for I4WDTA (true only for the bogged tests; their slight-incline test came out ~30% under, which the slope rule now says).
 
 ## Sources used (all in data.js)
 
-- **I4WDTA, Recovery Resistance Calculations (2020)**: total resistance = ground (weight / GCF, after Sibly's NZ 4WD Handbook) + gradient (1/60 per degree to 45°; the page uses weight × sin, which matches) + damage (weight × stuck wheels / wheels) + 25% margin; bogged to the axles = GCF − 1. Their worked example (3 500 lb Jeep, soft clay, one wheel, 15° = 4 375 lb) is a test.
-- **WARN**: 1.5 × GVWR winch rule; pull by layer (ZEON 8/10 tables; rated on layer 1); min 5 wraps steel / 10 synthetic; ZEON 10 spec and first-layer chart (via 4x4 Down Under's listing, as warn.com product pages weren't readable); 650 CCA; engine running; lithium caution; heavy-duty snatch block (two WLLs: 4:1 ASME B30.26 and 2:1 BS 7901, MBS 96 000 lb).
-- **Crosby G-209**: shackle WLL table, ultimate ≥ 6 × WLL. **LEEA COPSULE 7.5.6**: 8% per sheave. **Australian recovery strap standard (2017)** + **Bushranger's strap sheet**: MBS 2–3 × GVM of the lighter vehicle; stand 1.5 × stretched length away; 20% stretch. **SAE J537** (CCA test, 7.2 V) and **IEC 60028** (copper 1/58 Ω mm²/m) for the electrics.
-- The drum model (rope centre one rope diameter further out per layer) reproduces WARN's ZEON 10 layer table to within 0.5%; a test checks it.
+- **I4WDTA, Recovery Resistance Calculations (2020)**: total resistance = ground (weight / GCF, after Sibly's NZ 4WD Handbook) + gradient (1/60 per degree to 45°; the page uses weight × sin, which matches) + damage resistance + 25% margin. The page's three bog levels: **not bogged** = GCF; **bogged to the axles** = GCF − 1 (I4WDTA's rule); **bogged to the chassis** = no wheel can roll, damage resistance = full weight added to the ground (how I4WDTA worked out their "bogged to both diffs" field tests, 1–11% above measured). Their worked example (3 500 lb Jeep, soft clay, one wheel, 15° = 4 375 lb) is a test.
+- **WARN**: 1.5 × GVWR winch rule; pull by layer (rated on layer 1); min 5 wraps steel / 10 synthetic; ZEON 10 spec and first-layer chart (via 4x4 Down Under's listing); engine running, 650 CCA, lithium caution; heavy-duty snatch block (two WLLs: 4:1 ASME B30.26 and 2:1 BS 7901, MBS 96 000 lb).
+- **Crosby G-209**: shackle WLL table, ultimate ≥ 6 × WLL. **LEEA COPSULE 7.5.6**: 8% per sheave.
+- The drum model (rope centre one rope diameter further out per layer) reproduces WARN's ZEON 10 layer table to within 0.5%; a test checks it. The page draws every winch with the ZEON 10's drum (80 × 229 mm) and 9.5 mm rope, and scales the ZEON 10 chart to the user's rating; it says so under the readouts.
+
+## The page (one page, no modes)
+
+One `.stage` card, top to bottom:
+1. **Try:** example chips (`scenarios` in data.js; made-up figures).
+2. **Scene** (`V.scene()`): animated side view. The **mass** and **winch** fields are HTML overlays on the picture (on the roof and in the sky in front), placed by `toPercent()` so they follow the slope; under 860 px `placeFields()` in app.js moves them below the picture. Labels on the picture: rope pull needed (load arrow, coloured by ground/slope/bogging/margin) and what the winch gives on its starting layer (white arrow), on one scale. Slope turns the world (`rotate`, shrinks up to 30% at 45° so the tree stays in view); bogging sinks the vehicle into the ground (the ground is drawn over it); ground chips change the ground pattern (colours are illustration only). Animations by status: winching (wheels turn, vehicle edges forward, rope runs), close (slower), short (rope strains, winch arrow pulses red), rolls (downhill). All off under prefers-reduced-motion.
+3. **Controls:** ground chips (snow/rock ask for the nearest published ground), how deep (3 icon chips), slope (Uphill/Downhill + slider 0–45°, shows ° and %). No typed angle (owner's call).
+4. **Verdict:** headline, detail, a one-click fix when another line count or a closer anchor would work, and the balance bars (rope pull needed, segmented, with a tick at the estimate without margin; winch on its start layer, with a mark for its end layer).
+5. **How the rope is run:** three clickable thumbnails (single/double/triple, each with the winch pull and a pass/fail mark), the top-view rigging diagram with the **anchor distance typed on the rope**, and what each block / tree protector / rope end holds now and at the winch's full pull, with a Crosby shackle size.
+6. **The pull, metre by metre:** drum cross-section (one circle per wrap: grey = must stay on, blue = on at the start, light = wound on during the pull) with **rope length and steel/synthetic on the drum**; current gauge; pull chart (available vs needed) and current chart sharing the distance axis, with a playhead; Play button (plays once when it scrolls into view, 6 s); "the vehicle must move [x] m"; readouts (time, peak A, Ah drawn, rope wound in). No battery or wiring questions (owner's call); amps and Ah are what the winch draws.
+7. **Winch for this pull:** minimum rating (larger of WARN's 1.5 × mass and this pull on its start layer) and common sizes with 1/2/3-line pass marks.
+Then the disclaimer and explainers (layers, block and shackle MBS/WLL, gaps).
+
+- **Winch rating as typed** (`C.parseRating`): "EW9500" → 9 500 lb; "Zeon 10", "11XP" → thousands of lb (model-number reading, shown as such); "4.5 t", "4.T" → tonnes; "12 000 lb", "5443 kg", "9.5k", "45 kN"; a bare number ≥ 1000 → lb, ≤ 10 → tonnes; a unit beats a bare number. The page always shows its reading under the field and asks for a unit when unclear.
+- Status: pass if the winch covers the need including the 25% margin all the way; amber "Close" if it covers the estimate but not the whole margin; red if not, or if the rope can't reach the anchor and keep its minimum wraps.
 
 ## Structure
 
 ```
-index.html        The calculator: form (left/top), results (right/below), explainers
+index.html        The page (one stage) + explainers
 sources.html      Every rule with category, summary, quote, sources, checked date; gaps; source list
-js/data.js        THE data file: sources, rules (params/quote/checked), grounds, Crosby shackles, WARN ZEON 10 data, cables, gaps, scenarios
-js/calc.js        Pure calculations (no DOM): resistance, rigging (n lines, redirects), drum/layers, chart interpolation, electrics, simulate(), sizing, kinetic
-js/ui.js          DOM + formatting helpers (el(), kg/lb/kN, lbMin/kgMin round UP for minimums, check cards, "Sources:" line)
-js/diagrams.js    Resistance bar, rigging top view, drum layers, pull-along-the-recovery chart (crosshair tooltip). Drawn at the panel's real width so text stays readable on phones; app.js re-renders on resize
-js/app.js         Wires the form to calc.js, modes, scenarios, localStorage, renders every panel
+js/data.js        THE data file: sources, rules, grounds (+ how each is drawn), bog levels, Crosby shackles, WARN ZEON 10 data, gaps, scenarios, defaults, common winch sizes
+js/calc.js        Pure calculations (no DOM): resistance, parseRating, rigging, drum/layers, chart interpolation, motor, simulate(), sizing, shackleFor
+js/ui.js          DOM + formatting helpers (el(), kg/lb/kN, lbMin/kgMin round UP for minimums, "Sources:" line)
+js/diagrams.js    scene, lineThumb, rigging, drum, gauge, lineChart (playhead + tooltip). Rigging and charts are drawn at their box's real width so text stays readable on phones
+js/app.js         State, building the controls once, update(), playback
 js/sources.js     Builds sources.html from data.js
-css/style.css     The SA Towing Check stylesheet (trimmed) + this tool's additions at the end. Chart colours --series-1/2/3 were validated (colour-blind separation) on --surface-2; the site's --accent was too light for a series colour
-tests/            index.html + calc.test.js (data integrity, I4WDTA example, WARN layer table, rigging statics, electrics, kinetic); run.ps1 runs them in headless Edge
+css/style.css     The SA Towing Check stylesheet (base) + this tool's section at the end. Chart colours --series-1/2/3 were validated (colour-blind separation) on --surface-2; the site's --accent was too light for a series colour
+tests/            index.html + calc.test.js (data, I4WDTA example, bog levels, rating parser, rigging statics, WARN layer table, chart, simulation); run.ps1 runs them in headless Edge
 ```
-
-## Modes
-
-- **Simple** (default): mass, ground, bogged, slope, single or double line. Output: resistance + breakdown, rope pull, winch size (WARN 1.5 × vs this recovery; per-layer table uses WARN ZEON 10 ratios), common winch sizes, snatch block comparison + rigging diagram, gear ratings, strap MBS range, MBS vs WLL.
-- **Advanced** (`#advanced`; `#example` loads the deep-mud double-line scenario): adds stuck wheels, triple/four lines, rope angle, redirect block, anchor distance and pull distance, the user's winch (rating, rope, drum, MBS, editable performance chart), battery (lead-acid CCA or lithium BMS limit), cable size/length, alternator, and kinetic recovery.
-- In Simple, advanced-only inputs are treated as 0/off (never silently used). Scenarios that use triple lines or stuck wheels switch to Advanced.
-- Winch fields start as WARN ZEON 10 figures, labelled as such. Until the user edits the performance chart, current and speed come from the ZEON 10 chart scaled by fraction of rated pull (said on the page).
-- The pull simulation holds the needed rope pull constant over the whole distance (cautious) and tracks layer, pull available, current, speed, time and Ah as rope winds on.
-- Status: pass if the winch covers the need including the 25% margin; amber "Close" if it covers the estimate but not the whole margin; red if not.
 
 ## Preview and test
 
-- Open `index.html` (or `index.html#example`) from disk, or `python -m http.server`.
+- Open `index.html` from disk, or `python -m http.server`.
 - Tests: `powershell -ExecutionPolicy Bypass -File tests\run.ps1`.
-- Headless Edge won't render narrower than about 490 px; to check 390 px, screenshot a page that iframes `index.html` at 390 px. Must fit 390 px with no horizontal page scroll (wide tables scroll inside `.table-wrap`).
+- Headless Edge won't render narrower than about 490 px; to check 390 px, screenshot a page that iframes `index.html` at 390 px. Must fit 390 px with no horizontal page scroll. Also check ~700 px (fields below the picture) and desktop.
+- Watch for heredoc/escape trouble when editing from the shell: a `\b` once became a backspace character in app.js. `grep -nP "[\x00-\x08]" js/*.js` finds them.
 
 ## Conventions
 
 - Header: the same `.brand-bar` as fuel, towing and tyres (pill + Calculator/Sources, `logo.jpg`, eyebrow, title, subtitle). Favicons and `logo.jpg` are copies from the towing checker; change them together.
-- GoatCounter tag is on both pages with the host-prefix snippet, as on the other tools (harmless until hosted).
-- Brand is written **PsyPhin**. Commit identity (when this becomes a repo): `74655215+psyphin234@users.noreply.github.com`. The repo will be public: no personal names or private notes in committed files.
+- GoatCounter tag is on both pages with the host-prefix snippet, as on the other tools.
+- Brand is written **PsyPhin**. Commit identity: `74655215+psyphin234@users.noreply.github.com`. The repo is public: no personal names or private notes in committed files.
 
 ## Ideas parked by the owner
 
-- **Power budget** (fridge, lights, charging, laptop, inverter losses as editable presets labelled "typical, check your device's label"): the owner's idea, deliberately left for later as the least certain. Same source policy applies: preset draws need a maker's figure each, or a gap entry.
+- **Straps and kinetic recovery:** a separate page (see the top of this file for what to reuse).
+- **Power budget** (fridge, lights, charging, laptop, inverter losses as editable presets labelled "typical, check your device's label"): left for later as the least certain. Same source policy: preset draws need a maker's figure each, or a gap entry.

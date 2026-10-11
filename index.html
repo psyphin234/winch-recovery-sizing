@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Winch &amp; Recovery Sizing | PsyPhin</title>
-  <meta name="description" content="How much pull it takes to winch your 4x4 out, what winch, snatch block, strap and shackles that needs, and what it asks of your battery. From published recovery methods, manufacturer data and engineering, with a source for every number.">
+  <meta name="description" content="How much pull it takes to winch your 4x4 out, what double and triple line pulls do, and what your winch, drum and battery go through. From a published recovery method, manufacturer data and engineering, with a source for every number.">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#020203">
   <link rel="icon" href="favicon.ico" sizes="48x48">
@@ -34,318 +34,145 @@
     <div class="brand-inner">
       <a class="brand-logo-link" href="https://psyphin.co.za/" aria-label="PsyPhin home"><img src="logo.jpg" alt="PsyPhin" class="brand-logo" width="560" height="501"></a>
       <div class="brand-text">
-        <p class="brand-eyebrow">4x4 recovery &middot; Winch and gear sizing</p>
+        <p class="brand-eyebrow">4x4 recovery &middot; Winching</p>
         <h1>Winch &amp; Recovery Sizing</h1>
-        <p class="subtitle">How hard your winch has to pull to get you out, and the winch, snatch block, strap and shackles that takes. From a published recovery method, manufacturers' data and plain physics, with a source for every number.</p>
+        <p class="subtitle">How hard your winch has to pull to get you out, what a double or triple line does, and what your winch, its drum and its battery go through on the way. With a source for every number.</p>
       </div>
     </div>
   </header>
 
   <main id="main" class="wrap">
     <section class="intro">
-      <p class="disclaimer-link"><a href="#disclaimer">Disclaimer</a></p>
-      <p class="privacy">Everything is worked out in your browser. Nothing you enter is sent anywhere; page visits are counted anonymously, without cookies.</p>
-      <ul class="honesty">
-        <li><strong>Only published methods, manufacturers' data, standards and physics.</strong> No forum figures. Where nobody citable publishes a number (snow, rock, duty cycle), the page says so instead of guessing.</li>
-        <li><strong>The only number you need is your vehicle's mass:</strong> the GVM on the compliance plate or licence papers, or the weighbridge slip if you've weighed it loaded.</li>
-      </ul>
+      <p class="lede">Set up your recovery on the pictures: type on the vehicle, the winch and the rope, pick the ground, drag the slope. Everything updates as you go.</p>
+      <p class="privacy">Worked out in your browser; nothing you enter is sent anywhere. <a href="#disclaimer">Disclaimer</a> &middot; <a href="sources.html">Where every number comes from</a></p>
     </section>
 
-    <div class="modes modes--two" role="group" aria-label="How much detail?">
-      <button type="button" class="mode-button" data-mode="simple" aria-pressed="true">Simple <small>pull, winch size, gear</small></button>
-      <button type="button" class="mode-button" data-mode="advanced" aria-pressed="false">Advanced <small>drum, rope, battery, rigging</small></button>
-    </div>
-    <p class="mode-hint"><span id="mode-hint"></span> <a class="jump-link" href="#results-title">Jump to results</a></p>
+    <div class="stage" id="stage">
+      <div class="try" id="try"><span class="try-label">Try:</span></div>
 
-    <div class="layout">
-      <form id="winch-form" class="inputs" autocomplete="off" novalidate>
-        <div class="field scenario-field">
-          <label for="scenario">Start from a scenario <small>(optional)</small></label>
-          <select id="scenario"><option value="">Choose one to fill the form&hellip;</option></select>
-          <p class="hint">Made-up examples that show how the inputs combine. Masses are typical loaded 4x4s, not from a source.</p>
+      <!-- 1. The stuck vehicle: side view, with the mass and winch typed onto it -->
+      <div class="scene" id="scene">
+        <div class="scene-pic" id="scene-pic">
+        <div class="scene-tag scene-tag--load" id="tag-load" aria-hidden="true"></div>
+        <div class="scene-tag scene-tag--winch" id="tag-winch" aria-hidden="true"></div>
+        <div class="scene-fields">
+          <label class="scene-field" id="f-mass">
+            <span class="sf-label">Vehicle mass</span>
+            <span class="sf-input"><input id="massKg" type="number" inputmode="numeric" min="0" step="50" autocomplete="off"><span>kg</span></span>
+            <span class="sf-hint">GVM, or weighbridge</span>
+          </label>
+          <label class="scene-field scene-field--winch" id="f-winch">
+            <span class="sf-label">Your winch</span>
+            <span class="sf-input"><input id="winch" type="text" autocomplete="off" spellcheck="false" placeholder="EW9500, 4.5 t…"></span>
+            <span class="sf-hint" id="winch-read"></span>
+          </label>
         </div>
-
-        <fieldset>
-          <legend>The stuck vehicle</legend>
-          <div class="field">
-            <label for="massKg">Vehicle mass</label>
-            <div class="unit-input"><input id="massKg" name="massKg" type="number" inputmode="numeric" min="0" step="10" placeholder="e.g. 3000"><span>kg</span></div>
-            <p class="hint">The GVM from the compliance plate, licence disc papers or owner's manual (the worst case), or your weighbridge slip. WARN's winch rule and the strap standard are both written for GVM.</p>
-          </div>
-
-          <div class="field">
-            <label for="ground">Ground it's on</label>
-            <select id="ground" name="ground"></select>
-            <p class="hint">Ground factors from I4WDTA's recovery method (after Sibly's <cite>New Zealand 4 Wheel Drive Handbook</cite>). They're estimates: real ground varies.</p>
-          </div>
-
-          <div class="field" id="proxy-field" hidden>
-            <label for="proxy">Nearest published ground <small>(your choice)</small></label>
-            <select id="proxy" name="proxy"></select>
-            <p class="hint" id="proxy-hint"></p>
-          </div>
-
-          <div class="field">
-            <label class="check-label"><input type="checkbox" id="bogged" name="bogged"> <span>Bogged to the axles <small>I4WDTA: subtract 1 from the ground factor</small></span></label>
-          </div>
-
-          <div class="field">
-            <span class="label" id="slope-label">Slope</span>
-            <div class="slope-row">
-              <div class="choice choice--inline" role="radiogroup" aria-labelledby="slope-label">
-                <label><input type="radio" name="slopeDir" value="up" checked><span>Uphill</span></label>
-                <label><input type="radio" name="slopeDir" value="down"><span>Downhill</span></label>
-              </div>
-              <div class="unit-input slope-input"><input id="gradeDeg" name="gradeDeg" type="number" inputmode="decimal" min="0" max="60" step="1" value="0" aria-labelledby="slope-label"><span>°</span></div>
-            </div>
-            <p class="hint">The angle the vehicle has to be pulled along. <span id="grade-pct"></span> Phone apps and clinometers read it; it's safer to over-estimate (I4WDTA).</p>
-          </div>
-
-          <div class="field" data-modes="advanced">
-            <label for="stuckWheels">Wheels that can't roll</label>
-            <select id="stuckWheels" name="stuckWheels">
-              <option value="0">None: all wheels roll</option>
-              <option value="1">1 wheel</option>
-              <option value="2">2 wheels (e.g. bogged to one diff)</option>
-              <option value="3">3 wheels</option>
-              <option value="4">4 wheels (e.g. bogged to both diffs)</option>
-            </select>
-            <p class="hint">Flat, locked, missing, jammed against a rock or buried to the diff. I4WDTA counts each as its share of the vehicle's weight; in their field tests, bogged to the rear diff counted as 2 wheels.</p>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Rigging</legend>
-          <div class="field">
-            <span class="label" id="parts-label">How the rope is run</span>
-            <div class="choice" role="radiogroup" aria-labelledby="parts-label">
-              <label><input type="radio" name="parts" value="1" checked><span>Single line <small>winch straight to the anchor</small></span></label>
-              <label><input type="radio" name="parts" value="2"><span>Double line <small>one snatch block at the anchor</small></span></label>
-              <label data-modes="advanced"><input type="radio" name="parts" value="3"><span>Triple line <small>blocks at anchor and vehicle</small></span></label>
-              <label data-modes="advanced"><input type="radio" name="parts" value="4"><span>Four lines <small>three blocks</small></span></label>
-            </div>
-          </div>
-
-          <div class="field-row" data-modes="advanced">
-            <div class="field">
-              <label for="anchorM">Winch to anchor</label>
-              <div class="unit-input"><input id="anchorM" name="anchorM" type="number" inputmode="decimal" min="0" step="1" value="20"><span>m</span></div>
-            </div>
-            <div class="field">
-              <label for="moveM">Distance to pull</label>
-              <div class="unit-input"><input id="moveM" name="moveM" type="number" inputmode="decimal" min="0" step="1" value="8"><span>m</span></div>
-            </div>
-          </div>
-          <p class="hint field-row-hint" data-modes="advanced">How far the anchor is, and how far the vehicle must move to be free. The rope paid out is the distance times the number of lines.</p>
-
-          <div class="field" data-modes="advanced">
-            <label for="angleDeg">Rope angle off the vehicle's path</label>
-            <div class="unit-input"><input id="angleDeg" name="angleDeg" type="number" inputmode="decimal" min="0" max="45" step="1" value="0"><span>°</span></div>
-            <p class="hint">0° when the anchor is dead ahead in the direction the vehicle must move. At an angle, only part of the pull moves the vehicle (up to 45°).</p>
-          </div>
-
-          <div class="field" data-modes="advanced">
-            <label class="check-label"><input type="checkbox" id="redirect" name="redirect"> <span>Redirect block <small>a block that only changes the rope's direction</small></span></label>
-            <div class="unit-input redirect-angle" id="redirect-angle-wrap" hidden><input id="redirectDeg" name="redirectDeg" type="number" inputmode="decimal" min="0" max="180" step="5" value="90" aria-label="Angle between the two legs of rope at the redirect block"><span>° between legs</span></div>
-          </div>
-        </fieldset>
-
-        <fieldset data-modes="advanced">
-          <legend>Your winch</legend>
-          <p class="hint fieldset-hint" id="winch-default-hint">Filled in with WARN's published ZEON 10 figures (10 000 lb, 80 mm drum, 24.4 m of 9.5 mm steel rope): change them to your winch's.</p>
-          <div class="field">
-            <label for="ratedLb">Rated line pull</label>
-            <div class="unit-input"><input id="ratedLb" name="ratedLb" type="number" inputmode="numeric" min="0" step="500"><span>lb</span></div>
-            <p class="hint" id="rated-kg"></p>
-          </div>
-          <div class="field">
-            <span class="label" id="rope-type-label">Rope</span>
-            <div class="choice" role="radiogroup" aria-labelledby="rope-type-label">
-              <label><input type="radio" name="ropeType" value="steel" checked><span>Steel wire</span></label>
-              <label><input type="radio" name="ropeType" value="synthetic"><span>Synthetic</span></label>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="ropeDiaMm">Rope diameter</label>
-              <div class="unit-input"><input id="ropeDiaMm" name="ropeDiaMm" type="number" inputmode="decimal" min="0" step="0.5"><span>mm</span></div>
-            </div>
-            <div class="field">
-              <label for="ropeLengthM">Rope length</label>
-              <div class="unit-input"><input id="ropeLengthM" name="ropeLengthM" type="number" inputmode="decimal" min="0" step="1"><span>m</span></div>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="drumDiaMm">Drum diameter</label>
-              <div class="unit-input"><input id="drumDiaMm" name="drumDiaMm" type="number" inputmode="decimal" min="0" step="1"><span>mm</span></div>
-            </div>
-            <div class="field">
-              <label for="drumLengthMm">Drum length</label>
-              <div class="unit-input"><input id="drumLengthMm" name="drumLengthMm" type="number" inputmode="decimal" min="0" step="1"><span>mm</span></div>
-            </div>
-          </div>
-          <p class="hint field-row-hint">Bare drum, between the flanges. In the winch's spec sheet.</p>
-          <div class="field">
-            <label for="ropeMbsKg">Rope breaking strength (MBS) <small>(optional)</small></label>
-            <div class="unit-input"><input id="ropeMbsKg" name="ropeMbsKg" type="number" inputmode="numeric" min="0" step="100"><span>kg</span></div>
-            <p class="hint">On the rope's label or the maker's spec sheet. No default: rope strengths vary too much by make to guess.</p>
-          </div>
-
-          <details class="fieldset-details chart-details">
-            <summary>Performance chart <small>(optional)</small></summary>
-            <p class="hint fieldset-hint">Line pull, line speed and current on the first layer, from your winch's manual. Starts as WARN's ZEON 10 chart; until you change it, it's scaled to your winch's rating.</p>
-            <div class="table-wrap">
-              <table class="chart-table">
-                <thead><tr><th scope="col">Pull (lb)</th><th scope="col">Speed (m/min)</th><th scope="col">Current (A)</th></tr></thead>
-                <tbody id="chart-rows"></tbody>
-              </table>
-            </div>
-            <button type="button" class="button button--ghost small-button" id="chart-reset">Reset to WARN ZEON 10</button>
-          </details>
-        </fieldset>
-
-        <fieldset data-modes="advanced">
-          <legend>Battery and wiring</legend>
-          <div class="field">
-            <span class="label" id="batt-type-label">Battery</span>
-            <div class="choice" role="radiogroup" aria-labelledby="batt-type-label">
-              <label><input type="radio" name="battType" value="lead" checked><span>Lead-acid or AGM</span></label>
-              <label><input type="radio" name="battType" value="lithium"><span>Lithium (LiFePO4)</span></label>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" data-batt="lead">
-              <label for="cca">Cold cranking amps</label>
-              <div class="unit-input"><input id="cca" name="cca" type="number" inputmode="numeric" min="0" step="10" value="650"><span>CCA</span></div>
-            </div>
-            <div class="field" data-batt="lithium" hidden>
-              <label for="bmsA">BMS max discharge</label>
-              <div class="unit-input"><input id="bmsA" name="bmsA" type="number" inputmode="numeric" min="0" step="10" placeholder="e.g. 200"><span>A</span></div>
-            </div>
-            <div class="field">
-              <label for="ah">Capacity</label>
-              <div class="unit-input"><input id="ah" name="ah" type="number" inputmode="numeric" min="0" step="5" placeholder="e.g. 80"><span>Ah</span></div>
-            </div>
-          </div>
-          <p class="hint field-row-hint" data-batt="lead">On the battery's label. 650 CCA is WARN's minimum for winching.</p>
-          <p class="hint field-row-hint" data-batt="lithium" hidden>The battery management system's continuous discharge limit, from the battery's spec sheet. Many 100 Ah batteries are built for far less than a winch draws.</p>
-          <div class="field-row">
-            <div class="field">
-              <label for="cableSize">Winch cable</label>
-              <select id="cableSize" name="cableSize"></select>
-            </div>
-            <div class="field">
-              <label for="cableM">Battery to winch</label>
-              <div class="unit-input"><input id="cableM" name="cableM" type="number" inputmode="decimal" min="0" step="0.1" value="1.83"><span>m</span></div>
-            </div>
-          </div>
-          <p class="hint field-row-hint">One way; the page counts there and back. WARN's ZEON 10 leads are 1.83 m of 2 AWG. A battery in the load bin needs far longer cables.</p>
-          <div class="field">
-            <label for="altAmps">Alternator, engine running</label>
-            <div class="unit-input"><input id="altAmps" name="altAmps" type="number" inputmode="numeric" min="0" step="10" value="0"><span>A</span></div>
-            <p class="hint">What your alternator gives at the revs you'll winch at. 0 is the worst case: engine off. WARN recommends winching with the engine running.</p>
-          </div>
-        </fieldset>
-
-        <fieldset data-modes="advanced">
-          <legend>Kinetic recovery <small>(snatch strap or rope)</small></legend>
-          <div class="field">
-            <label for="otherGvmKg">Recovery vehicle mass</label>
-            <div class="unit-input"><input id="otherGvmKg" name="otherGvmKg" type="number" inputmode="numeric" min="0" step="10" placeholder="e.g. 3200"><span>kg</span></div>
-            <p class="hint">The vehicle doing the pulling. Its GVM picks the strap with yours: the standard goes by the lighter of the two.</p>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="kinMbsKg">Strap or rope MBS</label>
-              <div class="unit-input"><input id="kinMbsKg" name="kinMbsKg" type="number" inputmode="numeric" min="0" step="500" placeholder="e.g. 8000"><span>kg</span></div>
-            </div>
-            <div class="field">
-              <label for="kinLengthM">Length</label>
-              <div class="unit-input"><input id="kinLengthM" name="kinLengthM" type="number" inputmode="decimal" min="0" step="0.5" value="9"><span>m</span></div>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="kinStretchPct">Stretch at break</label>
-              <div class="unit-input"><input id="kinStretchPct" name="kinStretchPct" type="number" inputmode="numeric" min="1" max="60" step="1" value="30"><span>%</span></div>
-            </div>
-            <div class="field">
-              <label for="kinSpeedKmh">Speed when it tightens</label>
-              <div class="unit-input"><input id="kinSpeedKmh" name="kinSpeedKmh" type="number" inputmode="decimal" min="0" step="1" value="10"><span>km/h</span></div>
-            </div>
-          </div>
-          <p class="hint field-row-hint">Stretch: kinetic rope makers list 25–35% at break; Bushranger lists 20% for its snatch strap. Use the figure on your own strap or rope's label if it has one.</p>
-        </fieldset>
-
-        <div class="form-actions">
-          <button type="button" class="button button--ghost" data-print>Print</button>
-          <button type="button" class="button button--ghost" id="reset-form">Clear</button>
         </div>
-      </form>
+      </div>
 
-      <section class="results" aria-labelledby="results-title">
-        <h2 id="results-title" class="visually-hidden">Results</h2>
+      <div class="controls">
+        <div class="ctl ctl--ground">
+          <span class="ctl-label" id="ground-label">Ground</span>
+          <div class="chips" id="ground-chips" role="radiogroup" aria-labelledby="ground-label"></div>
+          <div class="proxy" id="proxy-wrap" hidden>
+            <label for="proxy">No published factor for <span id="proxy-name"></span>. It behaves most like:</label>
+            <select id="proxy"></select>
+          </div>
+        </div>
+        <div class="ctl ctl--bog">
+          <span class="ctl-label" id="bog-label">How deep</span>
+          <div class="chips chips--icons" id="bog-chips" role="radiogroup" aria-labelledby="bog-label"></div>
+        </div>
+        <div class="ctl ctl--slope">
+          <span class="ctl-label" id="slope-label">Slope</span>
+          <div class="slope">
+            <div class="seg" id="slope-dir" role="radiogroup" aria-labelledby="slope-label">
+              <button type="button" role="radio" data-dir="up" aria-checked="true">&#8599; Uphill</button>
+              <button type="button" role="radio" data-dir="down" aria-checked="false">&#8600; Downhill</button>
+            </div>
+            <input type="range" id="gradeDeg" min="0" max="45" step="1" aria-labelledby="slope-label">
+            <output id="grade-out" for="gradeDeg"></output>
+          </div>
+        </div>
+      </div>
 
-        <div id="overall" class="overall" role="status" aria-live="polite"></div>
+      <div class="verdict" id="verdict" role="status" aria-live="polite"></div>
 
-        <section class="panel panel--main" aria-labelledby="pull-title">
-          <h2 id="pull-title">The pull it takes</h2>
-          <div id="pull-body"></div>
-        </section>
+      <!-- 2. How the rope is run: pick on the pictures, type the distance on the rope -->
+      <div class="part" id="rig-part">
+        <p class="part-label">How the rope is run</p>
+        <div class="picker" id="picker" role="radiogroup" aria-label="Number of lines"></div>
+        <div class="rig" id="rig">
+          <label class="rig-field" id="f-anchor"><span class="visually-hidden">Distance from the winch to the anchor</span><input id="anchorM" type="number" inputmode="decimal" min="1" step="1"><span>m to anchor</span></label>
+        </div>
+        <ul class="gear" id="gear"></ul>
+      </div>
 
-        <section class="panel panel--main" aria-labelledby="size-title">
-          <h2 id="size-title">Winch size</h2>
-          <div id="size-body"></div>
-        </section>
+      <!-- 3. The pull, metre by metre: drum, current and pull along the way -->
+      <div class="part" id="play-part">
+        <p class="part-label">The pull, metre by metre</p>
+        <div class="play">
+          <div class="play-side">
+            <figure class="drum-box">
+              <div id="drum"></div>
+              <figcaption>
+                <span id="drum-layer" class="drum-layer"></span>
+                <span class="drum-rope">
+                  <label class="mini-field"><input id="ropeLengthM" type="number" inputmode="decimal" min="5" step="1" aria-label="Rope length"><span>m of</span></label>
+                  <span class="seg seg--mini" id="rope-type" role="radiogroup" aria-label="Rope type">
+                    <button type="button" role="radio" data-rope="steel" aria-checked="true">steel</button>
+                    <button type="button" role="radio" data-rope="synthetic" aria-checked="false">synthetic</button>
+                  </span>
+                  <span>rope</span>
+                </span>
+              </figcaption>
+            </figure>
+            <figure class="gauge-box">
+              <div id="gauge"></div>
+              <figcaption><strong id="amps-now">0 A</strong><span>current draw</span></figcaption>
+            </figure>
+          </div>
+          <div class="play-main">
+            <div id="chart-pull"></div>
+            <div id="chart-amps"></div>
+            <div class="play-bar">
+              <button type="button" class="play-button" id="play">&#9654; Play the pull</button>
+              <label class="mini-field">The vehicle must move <input id="moveM" type="number" inputmode="decimal" min="1" step="1" aria-label="Distance the vehicle must move"><span>m to be free</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="readouts" id="readouts"></div>
+      </div>
 
-        <section class="panel panel--main" aria-labelledby="block-title">
-          <h2 id="block-title">Snatch blocks</h2>
-          <div id="block-body"></div>
-        </section>
+      <!-- 4. Winch size -->
+      <div class="part" id="size-part">
+        <p class="part-label">Winch for this pull</p>
+        <div id="sizes"></div>
+      </div>
 
-        <section class="panel panel--main" aria-labelledby="your-winch-title" data-modes="advanced">
-          <h2 id="your-winch-title">Your winch through the pull</h2>
-          <div id="drum-body"></div>
-        </section>
-
-        <section class="panel panel--main" aria-labelledby="elec-title" data-modes="advanced">
-          <h2 id="elec-title">Battery and wiring</h2>
-          <div id="elec-body"></div>
-        </section>
-
-        <section class="panel panel--gear" aria-labelledby="gear-title">
-          <h2 id="gear-title">Recovery gear ratings</h2>
-          <div id="gear-body"></div>
-        </section>
-
-        <section class="panel panel--gear" aria-labelledby="kinetic-title" data-modes="advanced">
-          <h2 id="kinetic-title">Kinetic recovery</h2>
-          <div id="kinetic-body"></div>
-        </section>
-
-        <aside id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
-          <h2 id="disclaimer-title">Disclaimer</h2>
-          <p><strong>An estimate, not a guarantee.</strong> Recovery loads depend on ground nobody can measure exactly. The figures come from a published method, makers' data and physics, and each is linked to its source, but a real recovery can need more.</p>
-          <p>Use rated recovery points and rated gear, keep everyone well clear of the rope and the vehicles, and follow your winch maker's manual.</p>
-        </aside>
-
-        <section class="explainers" aria-label="Explainers">
-          <details class="explainer" id="explain-mbs">
-            <summary>MBS and WLL: why one rating isn't the other</summary>
-            <div class="explainer-body"></div>
-          </details>
-          <details class="explainer" id="explain-layers">
-            <summary>Why a winch loses pull as the rope piles up</summary>
-            <div class="explainer-body"></div>
-          </details>
-          <details class="explainer" id="explain-gaps">
-            <summary>What this page can't tell you</summary>
-            <div class="explainer-body"></div>
-          </details>
-        </section>
-      </section>
+      <div id="stage-sources"></div>
     </div>
+
+    <aside id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
+      <h2 id="disclaimer-title">Disclaimer</h2>
+      <p><strong>An estimate, not a guarantee.</strong> Recovery loads depend on ground nobody can measure exactly. The figures come from a published method, makers' data and physics, and each is linked to its source, but a real recovery can need more.</p>
+      <p>Use rated recovery points and rated gear, keep everyone well clear of the rope, and follow your winch maker's manual.</p>
+    </aside>
+
+    <section class="explainers" aria-label="Explainers">
+      <details class="explainer" id="explain-layers">
+        <summary>Why a winch loses pull as the rope piles up</summary>
+        <div class="explainer-body"></div>
+      </details>
+      <details class="explainer" id="explain-mbs">
+        <summary>Block and shackle ratings: MBS and WLL</summary>
+        <div class="explainer-body"></div>
+      </details>
+      <details class="explainer" id="explain-gaps">
+        <summary>What this page can't tell you</summary>
+        <div class="explainer-body"></div>
+      </details>
+    </section>
   </main>
 
   <footer class="site-footer">

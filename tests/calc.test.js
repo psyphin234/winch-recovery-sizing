@@ -32,7 +32,7 @@
 
   // ------------------------------------------------------------ data integrity
   test("every rule has its fields and known sources", () => {
-    const cats = ["method", "maker", "standard", "engineering", "calculation"];
+    const cats = ["method", "maker", "engineering", "calculation"];
     D.rules.forEach((r) => {
       ["id", "category", "title", "summary", "checked"].forEach((f) => {
         if (!r[f]) throw new Error(r.id + " missing " + f);
@@ -73,20 +73,34 @@
   });
 
   // ------------------------------------------------------------ resistance
-  test("I4WDTA worked example: 3 500 lb Jeep, soft clay, one wheel damaged, 15°", () => {
+  test("I4WDTA worked example parts: 3 500 lb Jeep, soft clay, 15°", () => {
     const W = C.lbToKg(3500);
-    const r = C.resistance({ massKg: W, ground: "clay", gradeDeg: 15, stuckWheels: 1 });
+    const r = C.resistance({ massKg: W, ground: "clay", gradeDeg: 15 });
     near(C.kgToLb(r.groundKg), 1750, 1e-9, "ground");
-    near(C.kgToLb(r.damageKg), 875, 1e-9, "damage");
     near(C.kgToLb(r.gradeRuleKg), 875, 1e-9, "gradient by the 1/60 rule");
     near(C.kgToLb(r.gradeKg), 875, 0.04, "gradient by sin()");
-    near(C.kgToLb(r.totalKg), 4375, 0.01, "total with 25% margin");
+    // their example adds one damaged wheel (875 lb) for 4 375 lb in all
+    near(C.kgToLb((r.sumKg + W / 4) * 1.25), 4375, 0.01, "total with a damaged wheel and 25% margin");
   });
 
   test("bogged to the axles subtracts 1 from the factor, never below 1", () => {
-    eq(C.resistance({ massKg: 3000, ground: "drysand", bogged: true }).gcf, 3, "dry sand bogged");
-    eq(C.resistance({ massKg: 3000, ground: "mud-deep", bogged: true }).gcf, 1, "deep mud bogged");
-    near(C.resistance({ massKg: 3000, ground: "mud-deep", bogged: true }).groundKg, 3000, 1e-9, "deep mud bogged = full weight");
+    eq(C.resistance({ massKg: 3000, ground: "drysand", bog: "axles" }).gcf, 3, "dry sand bogged");
+    eq(C.resistance({ massKg: 3000, ground: "mud-deep", bog: "axles" }).gcf, 1, "deep mud bogged");
+    near(C.resistance({ massKg: 3000, ground: "mud-deep", bog: "axles" }).groundKg, 3000, 1e-9, "deep mud bogged = full weight");
+  });
+
+  test("bogged to the chassis: no wheel rolls, so the full weight is added", () => {
+    const r = C.resistance({ massKg: 3000, ground: "clay", bog: "chassis" });
+    near(r.groundKg, 1500, 1e-9, "ground");
+    near(r.bogKg, 3000, 1e-9, "bogging");
+    near(r.totalKg, 4500 * 1.25, 1e-9, "total");
+  });
+
+  test("deeper is always harder: none < axles < chassis", () => {
+    D.grounds.filter((g) => g.gcf).forEach((g) => {
+      const t = (bog) => C.resistance({ massKg: 3000, ground: g.id, bog }).totalKg;
+      if (!(t("none") < t("axles") && t("axles") < t("chassis"))) throw new Error(g.id);
+    });
   });
 
   test("downhill gravity helps; a vehicle that rolls alone needs no pull", () => {
@@ -100,11 +114,6 @@
     const r = C.resistance({ massKg: 3000, ground: "snow", proxy: "gravel" });
     eq(r.gcf, 5, "uses gravel's factor");
     eq(r.ground.isProxy, true, "flagged as the user's choice");
-  });
-
-  test("rope at an angle must pull resistance / cos(angle)", () => {
-    near(C.angled(1000, 30).ropeKg, 1000 / Math.cos(Math.PI / 6), 1e-9);
-    near(C.angled(1000, 0).ropeKg, 1000, 1e-9);
   });
 
   // ------------------------------------------------------------ rigging
@@ -169,17 +178,6 @@
     near(b.lineSpeedMMin / C.chartAt(D.zeon10.chart, C.kgToLb(2000) / dr.layers[2].ratio).speedMMin, 1 / dr.layers[2].ratio, 1e-9, "speed scales with radius");
   });
 
-  test("battery resistance from CCA: (12.6 - 7.2) / CCA", () => {
-    const e = C.electrics({ type: "lead", cca: 650, cableMm2: 0, cableM: 0 }, 400);
-    near(e.rBatt, 5.4 / 650, 1e-12, "R");
-    near(e.battVolts, 12.6 - (400 * 5.4) / 650, 1e-9, "V");
-  });
-
-  test("cable drop: I x 2L / (58 x A)", () => {
-    const e = C.electrics({ type: "lead", cca: 650, cableMm2: 33.6, cableM: 1.83 }, 400);
-    near(e.cableDrop, (400 * 2 * 1.83) / (58 * 33.6), 1e-9);
-  });
-
   // ------------------------------------------------------------ sizing and gear
   test("WARN sizing: 1.5 x GVM", () => near(C.winchSizing(3000, 0).warnKg, 4500, 1e-12));
 
@@ -190,16 +188,25 @@
     eq(C.shackleFor(9000), null, "beyond the table");
   });
 
-  test("strap MBS 2-3 x GVM of the lighter vehicle", () => {
-    const s = C.strapRange(2800);
-    eq(s.minKg, 5600);
-    eq(s.maxKg, 8400);
-  });
-
-  test("kinetic peak force doubles when speed doubles", () => {
-    const k = C.kinetic({ massKg: 2500, speedKmh: 10, mbsKg: 10000, lengthM: 9, stretchPct: 30 });
-    near(k.at(20).peakKg / k.at(10).peakKg, 2, 1e-9);
-    near(k.speedFor(k.at(12).peakKg), 12, 1e-9, "speedFor inverts at()");
+  // ------------------------------------------------------------ winch rating as typed
+  test("winch ratings read the way people write them", () => {
+    const lb = (t) => Math.round(C.parseRating(t).lb);
+    const kg = (t) => Math.round(C.parseRating(t).kg);
+    eq(lb("EW9500"), 9500, "EW9500");
+    eq(lb("Zeon 10-S"), 10000, "Zeon 10-S");
+    eq(lb("Runva 11XP"), 11000, "11XP");
+    eq(lb("12000"), 12000, "bare 12000");
+    eq(lb("12 000 lb"), 12000, "spaced thousands with lb");
+    eq(lb("9.5k"), 9500, "9.5k");
+    eq(kg("4.5 t"), 4500, "4.5 t");
+    eq(kg("4.T"), 4000, "4.T");
+    eq(kg("4.5T"), 4500, "4.5T");
+    eq(kg("5443 kg"), 5443, "kg");
+    eq(kg("4.5"), 4500, "bare 4.5 = tonnes");
+    eq(kg("EW9500 4.T"), 4000, "a unit wins");
+    eq(C.parseRating("").ok, false, "empty");
+    eq(C.parseRating("big one").ok, false, "no number");
+    eq(C.parseRating("450").ok, false, "unclear without a unit");
   });
 
   // ------------------------------------------------------------ the whole pull
@@ -208,11 +215,10 @@
     const s = C.simulate({
       drum: dr, ropeOutM: 20, moveM: 15, parts: 1, winchKg: 1500, ratedLb: 10000,
       chart: D.zeon10.chart, chartRatedLb: 10000,
-      elec: { type: "lead", cca: 650, cableMm2: 33.6, cableM: 1.83, altAmps: 0 },
     });
     eq(s.startLayer, 1, "start layer");
     if (!(s.endLayer > s.startLayer)) throw new Error("should end on a higher layer");
-    if (!(s.timeS > 0 && s.ah > 0)) throw new Error("time and charge should be positive");
+    if (!(s.timeS > 0 && s.ah > 0)) throw new Error("time and amp-hours should be positive");
     eq(s.failsAtM, null, "1.5 t is within a 10 000 lb winch all the way");
   });
 

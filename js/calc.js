@@ -34,9 +34,10 @@
   }
 
   /*
-   * Total resistance = ground + gradient + wheels that can't roll, plus the
-   * 25% safety margin (I4WDTA). i: { massKg, ground, proxy, bogged, gradeDeg,
-   * stuckWheels, wheels }
+   * Total resistance = ground + slope + bogging, plus the 25% safety margin
+   * (I4WDTA). i: { massKg, ground, proxy, bog: "none"|"axles"|"chassis", gradeDeg }
+   * Bogged to the axles: ground factor less 1. Bogged to the chassis: no wheel
+   * can roll, so I4WDTA's damage resistance adds the full weight.
    */
   function resistance(i) {
     const W = num(i.massKg, 0);
@@ -44,11 +45,13 @@
     if (!(W > 0)) return { incomplete: true, reason: "mass" };
     if (!g.used) return { incomplete: true, reason: g.chosen ? "proxy" : "ground", ground: g };
 
-    const bog = D.rule("bogged-axles").params;
-    const gcf = i.bogged ? Math.max(g.used.gcf - bog.subtract, bog.minFactor) : g.used.gcf;
+    const level = i.bog === "axles" || i.bog === "chassis" ? i.bog : "none";
+    const ax = D.rule("bogged-axles").params;
+    const ch = D.rule("bogged-chassis").params;
+    const gcf = level === "axles" ? Math.max(g.used.gcf - ax.subtract, ax.minFactor) : g.used.gcf;
     const deg = clamp(num(i.gradeDeg, 0), -89, 89);
-    const wheels = Math.max(1, Math.round(num(i.wheels, 4)));
-    const stuck = clamp(Math.round(num(i.stuckWheels, 0)), 0, wheels);
+    const wheels = ch.wheels;
+    const stuck = level === "chassis" ? ch.wheelsDown : 0;
 
     const groundKg = W / gcf;
     const gradeKg = W * Math.sin(deg * DEG);
@@ -63,14 +66,12 @@
       massKg: W,
       ground: g,
       gcf,
-      bogged: !!i.bogged,
+      bog: level,
       gradeDeg: deg,
-      wheels,
-      stuckWheels: stuck,
       groundKg,
       gradeKg,
       gradeRuleKg,
-      damageKg,
+      bogKg: damageKg,
       sumKg: base,
       marginKg,
       totalKg: base + marginKg,
@@ -79,10 +80,40 @@
     };
   }
 
-  // Rope pulling at an angle to the way the vehicle must move.
-  function angled(forceKg, angleDeg) {
-    const a = clamp(num(angleDeg, 0), 0, D.rule("line-angle").params.maxDeg) * DEG;
-    return { ropeKg: forceKg / Math.cos(a), sideKg: forceKg * Math.tan(a) };
+  /*
+   * Winch rating typed as people know it: "EW9500", "Zeon 10-S", "4.5 t",
+   * "12000 lb", "5443 kg", "9.5k", "45 kN". Returns { kg, lb, how, ok }.
+   * A number with a unit wins. Without one: 1 000 or more is lb (winches are
+   * sold in lb); a small number inside a model name ("Zeon 10", "11XP") is
+   * thousands of lb; a bare small number is tonnes. Anything else asks for a unit.
+   * This is reading the user's input, not data: the page always shows the reading.
+   */
+  function parseRating(text) {
+    // "12 000 lb": join thousands written with a space (the SA way)
+    const t = String(text || "").trim().replace(/(\d)[\s\u00a0\u202f](?=\d{3}(?!\d))/g, "$1");
+    if (!t) return { ok: false, how: "empty" };
+    const re = /(?<![\d.,])(\d+(?:[.,]\d*)?)(?:\s*(lbs?|pounds?|kgs?|kn|k|tonnes?|tons?|t)(?![a-z]))?/gi;
+    const found = [];
+    let m;
+    while ((m = re.exec(t))) {
+      if (m[1].replace(/[.,]/g, "") === "") continue;
+      found.push({ n: parseFloat(m[1].replace(",", ".")), unit: (m[2] || "").toLowerCase() });
+    }
+    if (!found.length) return { ok: false, how: "no-number" };
+    const pick = found.find((f) => f.unit) || found[0];
+    const n = pick.n;
+    const lbOut = (lb, how) => ({ ok: lb > 0, lb, kg: lb * LB, how });
+    const kgOut = (kg, how) => ({ ok: kg > 0, kg, lb: kg / LB, how });
+    if (/^lb|^pound/.test(pick.unit)) return lbOut(n, "lb");
+    if (/^kg/.test(pick.unit)) return kgOut(n, "kg");
+    if (pick.unit === "kn") return kgOut((n * 1000) / G, "kN");
+    if (pick.unit === "k") return lbOut(n * 1000, "k-lb");
+    if (/^t/.test(pick.unit)) return kgOut(n * 1000, "t");
+    if (n >= 1000) return lbOut(n, "lb-assumed");
+    const hasName = /[a-z]/i.test(t.replace(/(lbs?|kgs?|kn|tonnes?|tons?)/gi, ""));
+    if (hasName && n >= 2 && n <= 30) return lbOut(n * 1000, "model-thousands");
+    if (!hasName && n > 0 && n <= 10) return kgOut(n * 1000, "t-assumed");
+    return { ok: false, how: "unclear", n };
   }
 
   // ------------------------------------------------------------ rigging
@@ -99,7 +130,7 @@
    * back) of blocks that only change direction, between winch and system.
    */
   function rigging(forceKg, parts, redirects, eta) {
-    const n = clamp(Math.round(num(parts, 1)), 1, 4);
+    const n = clamp(Math.round(num(parts, 1)), 1, 4); // the page offers 1-3
     const e = num(eta, sheaveEfficiency());
     const reds = (redirects || []).filter((a) => typeof a === "number" && isFinite(a));
     let sumEta = 0;
@@ -213,32 +244,12 @@
     return { amps: c.amps, lineSpeedMMin: c.speedMMin / layer.ratio, fractionOfRating: frac };
   }
 
-  // ------------------------------------------------------------ electrics
-  function electrics(e, amps) {
-    const cca = D.rule("cca-resistance").params;
-    const rho = D.rule("cable-drop").params.ohmMm2PerM;
-    const rCable = num(e.cableMm2, 0) > 0 ? (2 * num(e.cableM, 0) * rho) / e.cableMm2 : 0;
-    let rBatt = null;
-    if (e.type === "lead" && num(e.cca, 0) > 0) rBatt = (cca.restVolts - cca.ccaEndVolts) / e.cca;
-    if (e.type === "lithium" && num(e.rIntMohm, 0) > 0) rBatt = e.rIntMohm / 1000;
-    const battVolts = rBatt === null ? null : cca.restVolts - amps * rBatt;
-    const cableDrop = amps * rCable;
-    return {
-      rCable,
-      rBatt,
-      cableDrop,
-      battVolts,
-      winchVolts: battVolts === null ? null : battVolts - cableDrop,
-      netBattAmps: Math.max(0, amps - Math.max(0, num(e.altAmps, 0))),
-    };
-  }
-
   // ------------------------------------------------------------ the whole pull
   /*
    * Steps the vehicle from where it is to moveM along, winding rope onto the
    * drum (parts x distance), and tracks the layer, pull available, current,
-   * speed, time and charge used. The needed rope pull is held constant (a
-   * conservative choice: in reality it usually drops once the vehicle is free).
+   * speed, time and the amp-hours the winch draws. The needed rope pull is held
+   * constant (a cautious choice: in reality it usually drops once it's free).
    */
   function simulate(p) {
     const dr = p.drum;
@@ -257,15 +268,14 @@
       const layer = layerAt(dr, onDrum);
       const availKg = ratedKg * layer.ratio;
       const m = motor(p.winchKg, layer, p.ratedLb, p.chart, p.chartRatedLb);
-      const el = electrics(p.elec, m.amps);
       const vehicleMs = m.lineSpeedMMin / 60 / p.parts;
       if (i > 0) {
         const dt = dx / vehicleMs;
         timeS += dt;
-        ah += (el.netBattAmps * dt) / 3600;
+        ah += (m.amps * dt) / 3600;
       }
       if (failsAtM === null && availKg < p.winchKg) failsAtM = x;
-      points.push({ x, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, winchVolts: el.winchVolts, battVolts: el.battVolts });
+      points.push({ x, t: timeS, layer: layer.n, availKg, neededKg: p.winchKg, amps: m.amps, lineSpeedMMin: m.lineSpeedMMin, onDrumM: onDrum, fractionOfRating: m.fractionOfRating });
     }
     const peak = points.reduce((a, b) => (b.amps > a.amps ? b : a), points[0]);
     const minMargin = points.reduce((m, pt) => Math.min(m, pt.availKg / pt.neededKg), Infinity);
@@ -275,7 +285,6 @@
       ah,
       peakAmps: peak.amps,
       peakPoint: peak,
-      minVolts: points.reduce((m, pt) => (pt.winchVolts === null ? m : Math.min(m, pt.winchVolts)), Infinity),
       startLayer: points[0].layer,
       endLayer: points[points.length - 1].layer,
       minMargin,
@@ -296,35 +305,6 @@
     return pick ? Object.assign({ mbsT: pick.wllT * s.designFactor }, pick) : null;
   }
 
-  function strapRange(lighterGvmKg) {
-    const p = D.rule("strap-mbs").params;
-    return { minKg: lighterGvmKg * p.min, maxKg: lighterGvmKg * p.max };
-  }
-
-  /*
-   * Kinetic recovery, idealised: the rope is a linear spring reaching its MBS
-   * at its rated stretch, the stuck vehicle doesn't move, and all the moving
-   * vehicle's energy goes into the rope. k: { massKg, speedKmh, mbsKg,
-   * lengthM, stretchPct }
-   */
-  function kinetic(k) {
-    const m = num(k.massKg, 0);
-    const L = num(k.lengthM, 0);
-    const s = num(k.stretchPct, 0) / 100;
-    const mbsN = num(k.mbsKg, 0) * G;
-    if (!(m > 0 && L > 0 && s > 0 && mbsN > 0)) return null;
-    const stiff = mbsN / (L * s); // N per metre of stretch
-    const at = (kmh) => {
-      const v = kmh / 3.6;
-      const energyJ = 0.5 * m * v * v;
-      const forceN = Math.sqrt(2 * energyJ * stiff);
-      return { kmh, energyJ, peakKg: forceN / G, stretchM: forceN / stiff, fractionOfMbs: forceN / mbsN };
-    };
-    // speed at which the idealised peak force reaches a given force
-    const speedFor = (forceKg) => ((forceKg * G) / Math.sqrt(m * stiff)) * 3.6;
-    return { stiffNPerM: stiff, at, speedFor, current: at(num(k.speedKmh, 0)) };
-  }
-
   root.WINCH_CALC = {
     kgToLb,
     lbToKg,
@@ -332,7 +312,7 @@
     ground,
     groundUsed,
     resistance,
-    angled,
+    parseRating,
     sheaveEfficiency,
     rigging,
     drum,
@@ -340,11 +320,8 @@
     minWrapsM,
     chartAt,
     motor,
-    electrics,
     simulate,
     winchSizing,
     shackleFor,
-    strapRange,
-    kinetic,
   };
 })(window);
