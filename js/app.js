@@ -415,14 +415,20 @@
     items.push({ name: "Tree protector", where: "and the anchor", kg: cur.rig.anchorKg });
     const end = cur.rig.points[cur.rig.points.length - 1];
     if (end.at === "vehicle") items.push({ name: "Rope end", where: "on a recovery point", kg: end.loadKg });
+    // two figures per piece: what this pull puts on it, and what to rate it for (the winch at full pull)
+    const why = rating.ok
+      ? `if the winch pulls its full ${U.kg(fullKg)}`
+      : `if a winch at the ${U.lbMin(fullKg)} minimum pulls its full rating`;
     $("gear").replaceChildren(...items.map((it) => {
       const full = it.kg * scale;
       const sh = C.shackleFor(full);
       return el("li", { class: "gear-item" },
         el("span", { class: "gear-name" }, it.name, el("small", null, it.where)),
-        el("span", { class: "gear-load" }, U.kg(it.kg), el("small", null, `${U.kg(full)} at full winch pull`)),
+        el("span", { class: "gear-load" }, el("small", null, "this pull"), U.kg(it.kg)),
+        el("span", { class: "gear-rate" }, el("strong", null, `Rate it for ${U.kg(full)}`), el("small", null, why)),
         el("span", { class: "gear-shackle" + (sh ? "" : " is-over") }, sh ? `${sh.size} shackle` : "Over 8.5 t", el("small", null, sh ? `${U.tonnes(sh.wllT)} WLL (Crosby)` : "rated rigging only")));
     }));
+    $("gear-note").textContent = `Each piece carries the first figure in this pull. Rate it for the second: if the vehicle snags or digs in, the winch can pull its full rating, and the blocks multiply that just as they multiply this pull.`;
   }
 
   // ------------------------------------------------------------ the pull, metre by metre
@@ -614,7 +620,7 @@
       const copes = dr.layers.filter((l) => used(l.n)).every((l) => kg * l.ratio >= need);
       const mineChip = rating.ok && Math.abs(rating.lb - lb) < 1;
       return el("li", { class: "size" + (copes ? " size--ok" : " size--no") + (mineChip ? " size--mine" : "") },
-        el("span", { class: "size-head" }, el("strong", null, U.n(lb, 1) + " lb"), el("span", { class: "size-say" }, copes ? "copes" : "too small")),
+        el("span", { class: "size-head" }, el("strong", null, U.n(lb, 1) + " lb")),
         el("small", null, U.kg(kg) + (kg >= sizing.warnKg ? " · meets WARN's rule" : "")),
         el("span", { class: "layer-boxes" }, boxes));
     });
@@ -654,7 +660,7 @@
       mine,
       el("p", { class: "layers-title" }, `Common winch sizes, ${lineWord}`),
       el("ul", { class: "sizes" }, chips),
-      el("p", { class: "hint" }, `Each numbered box is a layer of rope on the drum: green has enough pull for this ${lineWord}, red doesn't. Outlined boxes are the layers this pull uses (${usedText}). A winch copes when all of them are green.`)
+      el("p", { class: "hint" }, `Each numbered box is a layer of rope on the drum: green has enough pull for this ${lineWord}, red doesn't. Outlined boxes are the layers this pull uses (${usedText}): all of them green means enough winch for this pull.`)
     );
   }
 
