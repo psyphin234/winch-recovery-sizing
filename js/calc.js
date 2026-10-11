@@ -213,9 +213,11 @@
     return dr.layers[dr.layers.length - 1];
   }
 
-  // Rope length in the minimum wraps the maker says to leave on the drum.
+  // Rope length in the wraps that must stay on the drum: the page's figure, or WARN's
+  // figure for a rope type when one is asked for (tests and the rule's text use both).
   function minWrapsM(dr, ropeType) {
-    const wraps = D.rule("min-wraps").params[ropeType === "synthetic" ? "synthetic" : "steel"];
+    const p = D.rule("min-wraps").params;
+    const wraps = ropeType === "synthetic" ? p.synthetic : ropeType === "steel" ? p.steel : p.used;
     return { wraps, m: (wraps * 2 * Math.PI * dr.layers[0].rMm) / 1000 };
   }
 

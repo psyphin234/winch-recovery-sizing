@@ -169,10 +169,11 @@
     eq(C.layerAt(dr, dr.ropeLengthM).n, dr.layers.length, "full drum");
   });
 
-  test("minimum wraps: 5 steel, 10 synthetic (WARN)", () => {
+  test("minimum wraps: WARN's 5 steel and 10 synthetic; the page uses 5", () => {
     const dr = C.drum({ drumDiaMm: 80, drumLengthMm: 229, ropeDiaMm: 9.52, ropeLengthM: 24.38 });
     eq(C.minWrapsM(dr, "steel").wraps, 5);
     eq(C.minWrapsM(dr, "synthetic").wraps, 10);
+    eq(C.minWrapsM(dr).wraps, 5, "the page's figure");
   });
 
   // ------------------------------------------------------------ motor and electrics

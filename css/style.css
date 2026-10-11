@@ -2101,7 +2101,6 @@ select:focus {
   font-weight: 600;
 }
 
-.seg--mini button { font-size: 0.78rem; padding: 2px 8px; min-height: 26px; }
 
 @media (max-width: 420px) {
   .slope { grid-template-columns: 1fr auto; }

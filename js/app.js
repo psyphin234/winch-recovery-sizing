@@ -58,7 +58,7 @@
     const rating = C.parseRating(S.winch);
     const dr = C.drum({ drumDiaMm: Z.drumDiaMm, drumLengthMm: Z.drumLengthMm, ropeDiaMm: Z.ropeDiaMm, ropeLengthM: numOr(S.ropeLengthM, Z.ropeLengthM) });
     if (res.incomplete || !dr) return { res, rating, dr };
-    const mw = C.minWrapsM(dr, S.ropeType);
+    const mw = C.minWrapsM(dr);
     const anchorM = Math.max(1, numOr(S.anchorM, 15));
     const moveM = Math.max(0.5, Math.min(numOr(S.moveM, 6), anchorM));
     const ang = C.angled(res.totalKg, numOr(S.ropeAngleDeg, 0));
@@ -162,7 +162,6 @@
     bindNum("moveM", "moveM");
     bindNum("ropeLengthM", "ropeLengthM");
     $("winch").addEventListener("input", (e) => set({ winch: e.target.value }));
-    document.querySelectorAll("#rope-type button").forEach((b) => b.addEventListener("click", () => set({ ropeType: b.dataset.rope })));
 
     // rope picker
     [1, 2, 3].forEach((n) => {
@@ -230,7 +229,6 @@
     document.querySelectorAll("#ground-chips .chip").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.ground === S.ground)));
     document.querySelectorAll("#bog-chips .chip").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.bog === S.bog)));
     document.querySelectorAll("#slope-dir button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.dir === S.slopeDir)));
-    document.querySelectorAll("#rope-type button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.rope === S.ropeType)));
     document.querySelectorAll("#picker .pick").forEach((b) => b.setAttribute("aria-checked", String(+b.dataset.parts === S.parts)));
     const g = C.ground(S.ground);
     $("proxy-wrap").hidden = !(g && g.proxy);
@@ -430,7 +428,7 @@
   // ------------------------------------------------------------ the pull, metre by metre
   function renderPlay() {
     const { cur, dr, mw } = R;
-    const key = dr.ropeLengthM + "|" + S.ropeType;
+    const key = String(dr.ropeLengthM);
     if (key !== drumKey) {
       drumView = V.drum(dr, mw.m);
       $("drum").replaceChildren(drumView.el);
@@ -706,7 +704,7 @@
         el("li", null, el("span", { class: "rp-key rp-key--need", "aria-hidden": "true" }), `this pull, ${U.kg(needKg)} in the rope`)),
       el("div", { class: "rp-chart" }, rows),
       el("div", { class: "table-wrap" }, el("table", { class: "limit-table rp-table" }, el("thead", null, head), el("tbody", null, body))),
-      el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high; the "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. Synthetic rope needs 10 wraps left on the drum (WARN). GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
+      el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high; the "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. WARN says to leave 10 wraps of synthetic rope on the drum; the page keeps 5 throughout. GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
       U.sourcesLine(["synthetic-rope", "rope-wll", "min-wraps"])
     );
   }

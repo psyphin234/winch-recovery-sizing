@@ -242,10 +242,10 @@
       id: "min-wraps",
       category: "maker",
       title: "Rope that must stay on the drum",
-      summary: "Leave at least 5 wraps of wire rope, or 10 wraps of synthetic rope, on the drum. The rope's anchor on the drum isn't made to take the load.",
+      summary: "Leave at least 5 wraps of wire rope, or 10 wraps of synthetic rope, on the drum. The rope's anchor on the drum isn't made to take the load. The page always keeps 5 wraps on (the owner's call, so there's no rope-type choice); with synthetic rope, keep WARN's 10 in mind.",
       quote: "a minimum of 5 wraps on the drum with wire rope, and 10 wraps with synthetic rope",
       sources: ["warnLayers"],
-      params: { steel: 5, synthetic: 10 },
+      params: { steel: 5, synthetic: 10, used: 5 },
       checked: "2026-10-11",
     },
     {
@@ -375,7 +375,7 @@
   ];
 
   // The defaults the page opens with (also an example, labelled as such).
-  const defaults = { massKg: 3000, ground: "mud", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, ropeAngleDeg: 0, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM, ropeType: "steel" };
+  const defaults = { massKg: 3000, ground: "mud", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, ropeAngleDeg: 0, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM };
 
   root.WINCH_DATA = {
     sources,
