@@ -173,6 +173,16 @@
       checked: "2026-10-11",
     },
     {
+      id: "line-angle",
+      category: "calculation",
+      title: "Rope at an angle",
+      summary: "If the rope isn't in line with the way the vehicle has to move, only part of its pull moves the vehicle: the rope must pull the resistance ÷ cos(angle). The rest pulls the vehicle sideways (resistance × tan(angle)), loading its tyres, the fairlead and the winch mount. At 20° the rope pulls 6% more; at 45°, 41% more, with a sideways pull as big as the resistance itself.",
+      quote: "",
+      sources: ["physics"],
+      params: { sliderMaxDeg: 45 },
+      checked: "2026-10-11",
+    },
+    {
       id: "safety-margin",
       category: "method",
       title: "Safety margin on the estimate",
@@ -309,7 +319,7 @@
   ];
 
   // The defaults the page opens with (also an example, labelled as such).
-  const defaults = { massKg: 3000, ground: "mud-shallow", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM, ropeType: "steel" };
+  const defaults = { massKg: 3000, ground: "mud-shallow", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, ropeAngleDeg: 0, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM, ropeType: "steel" };
 
   root.WINCH_DATA = {
     sources,

@@ -116,6 +116,13 @@
     eq(r.ground.isProxy, true, "flagged as the user's choice");
   });
 
+  test("rope at an angle pulls resistance / cos, and sideways resistance x tan", () => {
+    near(C.angled(1000, 0).ropeKg, 1000, 1e-12, "straight");
+    near(C.angled(1000, 20).ropeKg, 1000 / Math.cos((20 * Math.PI) / 180), 1e-12, "20°");
+    near(C.angled(1000, 45).sideKg, 1000, 1e-9, "45° sideways = resistance");
+    near(C.angled(1000, 80).angleDeg, 45, 1e-12, "capped at the slider's 45°");
+  });
+
   // ------------------------------------------------------------ rigging
   test("double line: winch pulls F / (1 + 0.92), anchor and block take F", () => {
     const g = C.rigging(4000, 2, [], 0.92);

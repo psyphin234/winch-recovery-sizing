@@ -80,6 +80,12 @@
     };
   }
 
+  // Rope pulling at an angle to the way the vehicle must move.
+  function angled(forceKg, angleDeg) {
+    const a = clamp(num(angleDeg, 0), 0, D.rule("line-angle").params.sliderMaxDeg) * DEG;
+    return { ropeKg: forceKg / Math.cos(a), sideKg: forceKg * Math.tan(a), angleDeg: a / DEG };
+  }
+
   /*
    * Winch rating typed as people know it: "EW9500", "Zeon 10-S", "4.5 t",
    * "12000 lb", "5443 kg", "9.5k", "45 kN". Returns { kg, lb, how, ok }.
@@ -312,6 +318,7 @@
     ground,
     groundUsed,
     resistance,
+    angled,
     parseRating,
     sheaveEfficiency,
     rigging,

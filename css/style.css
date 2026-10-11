@@ -25,6 +25,7 @@
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #9085e9;
+  --series-4: #d55181;
   --series-neutral: #7b8590;
 
   /* under construction banner */
@@ -1734,6 +1735,7 @@ select:focus {
 .sc-seg.seg-1 { fill: var(--series-1); }
 .sc-seg.seg-2 { fill: var(--series-2); }
 .sc-seg.seg-3 { fill: var(--series-3); }
+.sc-seg.seg-4 { fill: var(--series-4); }
 .sc-seg.seg-margin { fill: #9aa4ae; opacity: 0.55; }
 .sc-head--load { fill: var(--series-2); }
 .sc-winbar, .sc-head--winch { fill: #e6ebef; }
@@ -1896,7 +1898,51 @@ select:focus {
   padding: 16px;
 }
 
-.ctl--ground { grid-column: 1 / -1; }
+.ctl--ground,
+.ctl--bog { grid-column: 1 / -1; }
+
+.chips--icons .chip { max-width: 230px; }
+
+.ctl-label small {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.angle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.angle input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 30px;
+}
+
+.angle output {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  min-width: 5.6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.angle-svg { display: block; width: 104px; height: auto; }
+.av-veh { fill: #2c3a48; stroke: #8fa3b5; stroke-width: 1.5; }
+.av-glass { fill: #12202c; }
+.av-path { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.av-line { stroke: #e6ebef; stroke-width: 2.4; }
+.av-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 2.5; }
+.av-arc { fill: none; stroke: var(--series-4); stroke-width: 2; }
+.av-rope {
+  transform-box: view-box;
+  transform-origin: 46px 34px;
+  transition: transform 0.4s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
 
 @media (min-width: 900px) {
   .controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -2168,6 +2214,7 @@ select:focus {
 .seg-1 { background: var(--series-1); }
 .seg-2 { background: var(--series-2); }
 .seg-3 { background: var(--series-3); }
+.seg-4 { background: var(--series-4); }
 .seg-margin { background: repeating-linear-gradient(45deg, var(--series-neutral) 0 3px, transparent 3px 7px); box-shadow: inset 0 0 0 1px var(--series-neutral); }
 
 .bal-legend {
@@ -2674,7 +2721,8 @@ select:focus {
   .bal-end,
   .scene-field,
   .scene-tag,
-  .ga-needle {
+  .ga-needle,
+  .av-rope {
     animation: none !important;
     transition: none !important;
   }

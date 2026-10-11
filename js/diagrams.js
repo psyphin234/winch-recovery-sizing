@@ -154,7 +154,7 @@
     const LOAD_Y = 214;
     const WIN_X = 484;
     const WIN_Y = 192;
-    const loadSegs = ["seg-1", "seg-2", "seg-3", "seg-margin"].map((c) => svg("rect", { y: -8, height: 16, class: "sc-seg " + c }));
+    const loadSegs = ["seg-1", "seg-2", "seg-3", "seg-4", "seg-margin"].map((c) => svg("rect", { y: -8, height: 16, class: "sc-seg " + c }));
     const loadBar = svg("g", { class: "sc-arrow" }, loadSegs);
     const loadHead = svg("path", { d: "M0 -14 L-18 0 L0 14 Z", class: "sc-arrow sc-head--load" });
     const winBar = svg("g", { class: "sc-arrow" }, svg("rect", { x: 0, y: -6, width: 100, height: 12, class: "sc-winbar" }));
@@ -185,7 +185,7 @@
     }
 
     /*
-     * s: { look, bog, slopeDir, gradeDeg, parts, loadKg, segments[4], availKg, status }
+     * s: { look, bog, slopeDir, gradeDeg, parts, loadKg, segments[5], availKg, status }
      * Returns where the overlays go: the load and winch labels, the mass and winch inputs.
      */
     function update(s) {
@@ -498,5 +498,29 @@
     return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
   }
 
-  root.WINCH_DIAGRAMS = { scene, lineThumb, rigging, drum, gauge, lineChart, LOOKS };
+  // ------------------------------------------------------------ rope angle, seen from above
+  // The vehicle points the way it must move; the rope swings off to the anchor.
+  function angleView() {
+    const rope = svg("g", { class: "av-rope" },
+      svg("line", { x1: 46, y1: 34, x2: 118, y2: 34, class: "av-line" }),
+      svg("circle", { cx: 124, cy: 34, r: 7, class: "av-tree" }));
+    const node = svg("svg", { class: "angle-svg", viewBox: "0 0 140 68", "aria-hidden": "true" },
+      svg("line", { x1: 46, y1: 34, x2: 132, y2: 34, class: "av-path" }),
+      svg("path", { d: "M10 22 h30 q6 0 6 6 v12 q0 6 -6 6 h-30 q-4 0 -4 -4 v-16 q0 -4 4 -4 Z", class: "av-veh" }),
+      svg("rect", { x: 28, y: 25, width: 8, height: 18, rx: 2, class: "av-glass" }),
+      svg("path", { class: "av-arc", d: "" }),
+      rope);
+    const arc = node.querySelector(".av-arc");
+    return {
+      el: node,
+      set(deg) {
+        rope.style.transform = `rotate(${-deg}deg)`;
+        const a = (deg * Math.PI) / 180;
+        const r = 30;
+        arc.setAttribute("d", deg > 0.5 ? `M ${46 + r} 34 A ${r} ${r} 0 0 0 ${46 + r * Math.cos(a)} ${34 - r * Math.sin(a)}` : "");
+      },
+    };
+  }
+
+  root.WINCH_DIAGRAMS = { scene, lineThumb, rigging, drum, gauge, lineChart, angleView, LOOKS };
 })(window);

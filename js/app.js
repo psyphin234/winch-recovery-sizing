@@ -24,6 +24,7 @@
   let drumView = null;
   let drumKey = "";
   let gaugeView = null;
+  let angleView = null;
   let charts = [];
   const play = { raf: 0, x: null };
 
@@ -56,8 +57,9 @@
     const mw = C.minWrapsM(dr, S.ropeType);
     const anchorM = Math.max(1, numOr(S.anchorM, 15));
     const moveM = Math.max(0.5, Math.min(numOr(S.moveM, 6), anchorM));
+    const ang = C.angled(res.totalKg, numOr(S.ropeAngleDeg, 0));
     const runFor = (parts) => {
-      const rig = C.rigging(res.totalKg, parts, []);
+      const rig = C.rigging(ang.ropeKg, parts, []);
       const ropeOutM = parts * anchorM;
       const spareM = dr.ropeLengthM - mw.m - ropeOutM;
       const startLayer = C.layerAt(dr, dr.ropeLengthM - Math.min(ropeOutM, dr.ropeLengthM));
@@ -77,7 +79,7 @@
     const alts = [1, 2, 3].map(runFor);
     const cur = alts[S.parts - 1];
     const sizing = C.winchSizing(res.massKg, cur.rig.winchKg / cur.startLayer.ratio);
-    return { res, rating, dr, mw, anchorM, moveM, alts, cur, sizing };
+    return { res, ang, rating, dr, mw, anchorM, moveM, alts, cur, sizing };
   }
 
   // ------------------------------------------------------------ build once
@@ -95,7 +97,7 @@
       const b = el("button", { type: "button", class: "try-chip" }, sc.label);
       b.addEventListener("click", () => {
         stopPlay();
-        set(Object.assign({ proxy: "" }, sc.values));
+        set(Object.assign({ proxy: "", ropeAngleDeg: 0 }, sc.values));
         syncInputs();
         play.x = 0;
         if (!reduceMotion) startPlay();
@@ -138,6 +140,12 @@
     document.querySelectorAll("#slope-dir button").forEach((b) => b.addEventListener("click", () => set({ slopeDir: b.dataset.dir })));
     $("gradeDeg").max = D.rule("gradient").params.sliderMaxDeg;
     $("gradeDeg").addEventListener("input", (e) => set({ gradeDeg: +e.target.value }));
+
+    // rope angle, with a little top view that swings with the slider
+    angleView = V.angleView();
+    $("angle-view").appendChild(angleView.el);
+    $("ropeAngleDeg").max = D.rule("line-angle").params.sliderMaxDeg;
+    $("ropeAngleDeg").addEventListener("input", (e) => set({ ropeAngleDeg: +e.target.value }));
 
     // typed fields
     const bindNum = (id, key) => $(id).addEventListener("input", (e) => {
@@ -204,6 +212,7 @@
     $("moveM").value = S.moveM || "";
     $("ropeLengthM").value = S.ropeLengthM || "";
     $("gradeDeg").value = S.gradeDeg || 0;
+    $("ropeAngleDeg").value = S.ropeAngleDeg || 0;
     $("proxy").value = S.proxy || "";
   }
 
@@ -222,6 +231,9 @@
     if (g && g.proxy) $("proxy-name").textContent = g.label.toLowerCase();
     const deg = numOr(S.gradeDeg, 0);
     $("grade-out").textContent = deg ? `${deg}° · ${U.n(Math.tan((deg * Math.PI) / 180) * 100, 1)}%` : "Flat";
+    const ra = numOr(S.ropeAngleDeg, 0);
+    angleView.set(ra);
+    $("angle-out").textContent = ra ? `${ra}° · +${U.n((1 / Math.cos((ra * Math.PI) / 180) - 1) * 100, 1)}%` : "Straight";
     $("winch-read").textContent = ratingText(R.rating);
     $("f-winch").classList.toggle("is-unclear", !R.rating.ok);
 
@@ -243,7 +255,7 @@
     renderRig();
     renderPlay();
     renderSizes();
-    $("stage-sources").replaceChildren(U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "safety-margin", "mechanical-advantage", "sheave-friction", "layer-pull", "min-wraps", "winch-chart", "engine-running", "winch-size", "shackle-ratings"]));
+    $("stage-sources").replaceChildren(U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "line-angle", "safety-margin", "mechanical-advantage", "sheave-friction", "layer-pull", "min-wraps", "winch-chart", "engine-running", "winch-size", "shackle-ratings"]));
   }
 
   function ratingText(r) {
@@ -261,9 +273,9 @@
 
   // ------------------------------------------------------------ the scene
   function renderScene(g, deg) {
-    const { res, cur } = R;
+    const { res, cur, ang } = R;
     const share = 1 / cur.rig.advantage; // rope pull per kg of load on the vehicle
-    const segments = [res.groundKg, Math.max(res.gradeKg, 0), res.bogKg, res.marginKg];
+    const segments = [res.groundKg, Math.max(res.gradeKg, 0), res.bogKg, ang.ropeKg - res.totalKg, res.marginKg];
     const startAvail = cur.sim ? cur.sim.points[0].availKg : 0;
     const pos = sceneView.update({
       look: (res.ground.used || g).look,
@@ -293,7 +305,7 @@
 
   // ------------------------------------------------------------ verdict and balance
   function renderVerdict() {
-    const { res, cur, alts, rating, dr, mw, anchorM } = R;
+    const { res, ang, cur, alts, rating, dr, mw, anchorM } = R;
     // a model name reads as itself ("EW9500 can do it"); a bare rating as "A 4.5 t winch"
     const typed = S.winch.trim();
     const name = !rating.ok ? "Your winch" : /[a-z]{2,}/i.test(typed.replace(/\b(lbs?|kgs?|kn|tonnes?|tons?)\b/gi, "")) ? typed : `A ${typed} winch`;
@@ -336,6 +348,7 @@
       { label: res.gradeKg < 0 ? "Ground" : "Ground", kg: res.groundKg * share, cls: "seg-1" },
       { label: "Slope", kg: Math.max(res.gradeKg, 0) * share, cls: "seg-2" },
       { label: "Bogged to the chassis", kg: res.bogKg * share, cls: "seg-3" },
+      { label: `Rope angle ${U.n(ang.angleDeg, 1)}°`, kg: (ang.ropeKg - res.totalKg) * share, cls: "seg-4" },
       { label: "25% margin", kg: res.marginKg * share, cls: "seg-margin" },
     ].filter((p) => p.kg > 0.5);
     const avail = p0 ? p0.availKg : 0;
@@ -358,6 +371,7 @@
 
     const total = el("p", { class: "verdict-sub" },
       `To move it takes ${U.kg(res.totalKg)}, ${Math.round((res.totalKg / res.massKg) * 100)}% of its ${U.kg(res.massKg)}${S.parts > 1 ? `; ${S.parts} lengths of rope share that, less 8% friction per block` : ""}.`,
+      ang.angleDeg > 0.5 ? ` With the rope ${U.n(ang.angleDeg, 1)}° off its path, the rope must pull ${U.kg(ang.ropeKg)} to move it, and pulls it ${U.kg(ang.sideKg)} sideways: that load goes into the tyres, the fairlead and the winch mount.` : "",
       res.ground.isProxy ? ` ${res.ground.chosen.label} is worked out as ${res.ground.used.label.toLowerCase()}: your choice, not a source.` : "",
       res.beyondMethod ? " Steeper than 45° is beyond I4WDTA's method." : "");
 
@@ -384,7 +398,8 @@
     document.querySelectorAll("#picker .pick").forEach((b) => {
       const a = alts[+b.dataset.parts - 1];
       const st = a.status === "ok" ? "pass" : a.status === "close" ? "warn" : a.status === "short" || a.status === "rope" ? "fail" : null;
-      b.querySelector(".pick-sub").replaceChildren(st ? U.statusIcon(st) : null, `winch pulls ${U.kg(a.rig.winchKg)}`);
+      // a ✕ next to a smaller pull would puzzle: say when it's the rope's length that fails
+      b.querySelector(".pick-sub").replaceChildren(st ? U.statusIcon(st) : null, a.status === "rope" ? `rope too short at ${U.n(R.anchorM, 1)} m` : `winch pulls ${U.kg(a.rig.winchKg)}`);
       b.className = "pick" + (st ? " pick--" + st : "");
     });
     const box = $("rig");

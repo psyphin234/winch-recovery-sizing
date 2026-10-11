@@ -94,6 +94,14 @@
             <output id="grade-out" for="gradeDeg"></output>
           </div>
         </div>
+        <div class="ctl ctl--angle">
+          <span class="ctl-label" id="angle-label">Rope angle <small>off the way it must move</small></span>
+          <div class="angle">
+            <span id="angle-view"></span>
+            <input type="range" id="ropeAngleDeg" min="0" max="45" step="1" aria-labelledby="angle-label">
+            <output id="angle-out" for="ropeAngleDeg"></output>
+          </div>
+        </div>
       </div>
 
       <div class="verdict" id="verdict" role="status" aria-live="polite"></div>
