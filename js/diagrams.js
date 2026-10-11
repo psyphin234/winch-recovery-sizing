@@ -106,7 +106,6 @@
     const treeR = narrow ? 20 : 24;
     const treeX = W - treeR - 8;
     const xAnc = W - (narrow ? 84 : 120); // anchor side blocks
-    const strapX = treeX - treeR;
     const yOf = (k) => top + k * gap;
 
     const g = svg("g", null);
@@ -114,21 +113,18 @@
     const vy = yOf(0) - 26;
     const vh = Math.max(52, (n - 1) * gap + 52);
     g.appendChild(svg("rect", { class: "rg-vehicle", x: 8, y: vy, width: xVeh - 20, height: vh, rx: 10 }));
-    g.appendChild(svg("text", { class: "rg-label", x: 8 + (xVeh - 20) / 2, y: vy + vh / 2 + 6, "text-anchor": "middle" }, "Vehicle"));
+    g.appendChild(svg("text", { class: "rg-label", x: 8 + (xVeh - 20) / 2, y: n > 2 ? vy + 22 : vy + vh / 2 + 6, "text-anchor": "middle" }, "Vehicle"));
     g.appendChild(svg("rect", { class: "rg-winch", x: xVeh - 18, y: yOf(0) - 9, width: 16, height: 18, rx: 3 }));
-    // anchor (tree)
+    // anchor (tree): drawn last, over the ends of the straps
     const ty = yOf(0) + ((n - 1) * gap) / 2;
-    g.appendChild(svg("circle", { class: "rg-tree", cx: treeX, cy: ty, r: treeR }));
-    g.appendChild(svg("text", { class: "rg-label", x: W - 4, y: ty + treeR + 22, "text-anchor": "end" }, "Anchor"));
-    g.appendChild(svg("text", { class: "rg-value", x: W - 4, y: ty + treeR + 42, "text-anchor": "end" }, U.kg(rig.anchorKg)));
 
     // rope lengths
     for (let k = 0; k < n; k++) {
       const y = yOf(k);
       const x1 = k === 0 ? xVeh - 2 : xVeh + 8;
-      const x2 = k === n - 1 && n % 2 === 1 ? strapX : xAnc;
+      const x2 = k === n - 1 && n % 2 === 1 ? xAnc + 10 : xAnc;
       g.appendChild(svg("line", { class: "rg-rope", x1, y1: y, x2, y2: y }));
-      g.appendChild(svg("text", { class: "rg-seg", x: xVeh + (xAnc - xVeh) * (narrow ? 0.36 : 0.5), y: y - 7, "text-anchor": "middle" }, U.kg(rig.segments[k])));
+      g.appendChild(svg("text", { class: "rg-seg", x: xVeh + (xAnc - xVeh) * 0.3, y: y - 7, "text-anchor": "middle" }, U.kg(rig.segments[k])));
     }
     // blocks
     rig.points.forEach((p, i) => {
@@ -144,19 +140,24 @@
         const bx = p.at === "anchor" ? x + rr : x - rr;
         g.appendChild(svg("circle", { class: "rg-block", cx: bx, cy, r: 9 }));
         if (p.at === "anchor") {
-          g.appendChild(svg("line", { class: "rg-strap", x1: bx + 9, y1: cy, x2: strapX, y2: ty }));
+          g.appendChild(svg("line", { class: "rg-strap", x1: bx + 9, y1: cy, x2: treeX, y2: ty }));
         }
-        // label between the two ropes it joins, on the open side of the block
-        g.appendChild(svg("text", { class: "rg-blocklabel", x: p.at === "anchor" ? bx - 16 : bx + 16, y: cy + 5, "text-anchor": p.at === "anchor" ? "end" : "start" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
+        // label to the left of the block: between the ropes it joins (anchor side) or over the vehicle
+        g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
       } else {
         const y = yOf(n - 1);
         if (p.at === "vehicle") {
           g.appendChild(svg("circle", { class: "rg-end", cx: xVeh + 8, cy: y, r: 5 }));
         } else {
-          g.appendChild(svg("line", { class: "rg-strap", x1: strapX, y1: y, x2: strapX + 6, y2: ty }));
+          g.appendChild(svg("line", { class: "rg-strap", x1: xAnc + 10, y1: y, x2: treeX, y2: ty }));
+          g.appendChild(svg("circle", { class: "rg-end", cx: xAnc + 10, cy: y, r: 5 }));
         }
       }
     });
+    g.appendChild(svg("circle", { class: "rg-tree", cx: treeX, cy: ty, r: treeR }));
+    // anchor load below the lowest rope, clear of the straps
+    g.appendChild(svg("text", { class: "rg-label", x: W - 4, y: yOf(n - 1) + 34, "text-anchor": "end" }, "Anchor"));
+    g.appendChild(svg("text", { class: "rg-value", x: W - 4, y: yOf(n - 1) + 56, "text-anchor": "end" }, U.kg(rig.anchorKg)));
     // the winch's own pull
     g.appendChild(svg("text", { class: "rg-label", x: xVeh, y: top - 34, "text-anchor": "start" }, "Winch pulls " + U.kg(rig.winchKg)));
 
