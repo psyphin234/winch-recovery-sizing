@@ -65,6 +65,21 @@
       url: "https://kitocrosby.com/product/crosby-g-209-s-209-screw-pin-anchor-shackles/",
       kind: "maker",
     },
+    southernGp12: {
+      label: "Southern Ropes (Cape Town), GP-12 12-strand UHMWPE single braid datasheet, September 2026",
+      url: "https://www.southernropes.com/cdn/shop/files/GP-12_September_2026.pdf",
+      kind: "maker",
+    },
+    samsonAmsteel: {
+      label: "Samson Rope, AmSteel-Blue (12-strand Dyneema SK78) specifications",
+      url: "https://www.samsonrope.com/amsteel--blue",
+      kind: "maker",
+    },
+    samsonWarning: {
+      label: "Samson Rope, Warning statement (working loads and safety factors)",
+      url: "https://www.samsonrope.com/warning-statement",
+      kind: "maker",
+    },
     physics: {
       label: "Physics (statics): this site's own calculation",
       url: null,
@@ -126,6 +141,20 @@
     ropeDiaMm: 9.52,
     ropeLengthM: 24.38,
     batteryCca: 650,
+  };
+
+  /*
+   * Synthetic winch rope strengths, as each maker publishes them, in tonnes.
+   * GP-12: "Spliced Strength" (the sheet doesn't say minimum or average).
+   * AmSteel-Blue: Samson's spliced minimum strength (average in brackets on their page).
+   * Only the winch sizes; null = that size isn't in the maker's table.
+   */
+  const synthRopes = {
+    sizesMm: [8, 9, 10, 11, 12],
+    ropes: [
+      { id: "gp12", name: "GP-12", maker: "Southern Ropes", source: "southernGp12", basis: "spliced strength", t: { 8: 6.6, 9: 8.3, 10: 9.7, 11: null, 12: 15.3 } },
+      { id: "amsteel", name: "AmSteel-Blue", maker: "Samson", source: "samsonAmsteel", basis: "minimum spliced strength", t: { 8: 5.6, 9: 8.0, 10: null, 11: 9.8, 12: 13.9 } },
+    ],
   };
 
   const rules = [
@@ -270,6 +299,26 @@
       checked: "2026-10-11",
     },
     {
+      id: "synthetic-rope",
+      category: "maker",
+      title: "Synthetic winch rope strength",
+      summary: "Two 12-strand Dyneema-type (UHMWPE) ropes, at winch sizes. Southern Ropes' GP-12 (spliced strength): 8 mm 6.6 t, 9 mm 8.3 t, 10 mm 9.7 t, 12 mm 15.3 t; unspliced (\"linear\") 7.3, 9.2, 10.8 and 17.0 t. Its sheet doesn't say whether these are minimum or average strengths. Samson's AmSteel-Blue (minimum spliced strength, average in brackets): 8 mm 5.6 t (6.2), 9 mm 8.0 t (8.9), 11 mm 9.8 t (10.8), 12 mm 13.9 t (15.4). Each maker lists only some of the sizes.",
+      quote: "ISO strength specifications are for unspliced rope. All other strength specifications are for spliced rope.",
+      sources: ["southernGp12", "samsonAmsteel"],
+      params: synthRopes,
+      checked: "2026-10-12",
+    },
+    {
+      id: "rope-wll",
+      category: "maker",
+      title: "Working load of a rope",
+      summary: "Samson's guidance: for rope in normal use, a minimum 5:1 safety factor, so WLL = minimum breaking strength ÷ 5. It says working loads don't apply once a rope has been shock loaded, and that the factor should be raised substantially where recoil is a risk or the load is uncertain, and where life, limb or valuable property are involved. Southern Ropes' GP-12 sheet gives no working load, so the page applies Samson's 5:1 to both ropes.",
+      quote: "a minimum 5:1 safety factor, or a 10:1 safety factor for climbing lines ... WLL = MBS÷sf",
+      sources: ["samsonWarning"],
+      params: { factor: 5 },
+      checked: "2026-10-12",
+    },
+    {
       id: "wll-mbs",
       category: "maker",
       title: "MBS versus WLL",
@@ -338,6 +387,7 @@
     gaps,
     scenarios,
     defaults,
+    synthRopes,
     commonWinchesLb: [8000, 9500, 10000, 12000, 15000, 17500],
     units: { lbToKg: 0.45359237, g: 9.80665, ftToM: 0.3048 },
     rule(id) {

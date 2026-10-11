@@ -2849,6 +2849,93 @@ select:focus {
 .yw-verdict .status-icon { width: 22px; height: 22px; font-size: 0.8rem; }
 .yw-vs { margin-top: 4px !important; font-size: 0.88rem; color: var(--text-muted); }
 
+/* synthetic winch rope, side by side */
+.rp-legend {
+  list-style: none;
+  margin: 10px 0 8px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.rp-legend li { display: flex; align-items: center; }
+.rp-sw--gp12 { background: var(--series-1); }
+.rp-sw--amsteel { background: var(--series-3); }
+.rp-sw--wll { background: var(--text-muted); }
+.rp-key { display: inline-block; width: 3px; height: 14px; margin-right: 7px; }
+.rp-key--winch { background: #e6ebef; }
+.rp-key--need { background: repeating-linear-gradient(to bottom, var(--series-2) 0 3px, transparent 3px 5px); }
+
+.rp-chart { display: grid; gap: 10px; margin: 6px 0 14px; }
+.rp-table tbody th { text-transform: none; letter-spacing: 0; font-size: 0.875rem; color: var(--text); }
+
+.rp-size {
+  display: grid;
+  grid-template-columns: 4em minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rp-mm { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; }
+.rp-bars { display: grid; gap: 5px; }
+
+.rp-row {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr) 5.5em;
+  align-items: center;
+  gap: 10px;
+}
+
+.rp-name { font-size: 0.82rem; color: var(--text-muted); }
+.rp-none { grid-column: 2 / -1; font-size: 0.78rem; color: var(--text-muted); font-style: italic; }
+
+.rp-track {
+  position: relative;
+  height: 14px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.rp-fill {
+  position: relative;
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: width 0.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.rp-fill--gp12 { background: color-mix(in srgb, var(--series-1) 38%, var(--surface)); }
+.rp-fill--amsteel { background: color-mix(in srgb, var(--series-3) 38%, var(--surface)); }
+.rp-wll { display: block; height: 100%; }
+.rp-wll--gp12 { background: var(--series-1); }
+.rp-wll--amsteel { background: var(--series-3); }
+
+.rp-mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  transition: left 0.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.rp-mark--winch { background: #e6ebef; }
+.rp-mark--need { background: repeating-linear-gradient(to bottom, var(--series-2) 0 3px, transparent 3px 5px); }
+
+.rp-val { display: grid; text-align: right; line-height: 1.15; }
+.rp-val strong { font-family: var(--font-display); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.rp-val small { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .rp-size { grid-template-columns: 1fr; gap: 4px; }
+  .rp-row { grid-template-columns: 5.6em minmax(0, 1fr) 4.6em; gap: 8px; }
+}
+
 #stage-sources { padding: 0 16px 16px; }
 
 /* ------------------------------------------------------------ charts' tooltip */

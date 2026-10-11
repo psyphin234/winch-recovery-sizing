@@ -263,6 +263,7 @@
     renderRig();
     renderPlay();
     renderSizes();
+    renderRopes();
     $("stage-sources").replaceChildren(U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "line-angle", "safety-margin", "mechanical-advantage", "sheave-friction", "layer-pull", "min-wraps", "winch-chart", "power", "engine-running", "winch-size", "shackle-ratings"]));
   }
 
@@ -656,6 +657,57 @@
       el("p", { class: "layers-title" }, `Common winch sizes, ${lineWord}`),
       el("ul", { class: "sizes" }, chips),
       el("p", { class: "hint" }, `Each numbered box is a layer of rope on the drum: green has enough pull for this ${lineWord}, red doesn't. Outlined boxes are the layers this pull uses (${usedText}). A winch copes when all of them are green.`)
+    );
+  }
+
+  // ------------------------------------------------------------ synthetic winch rope, side by side
+  function renderRopes() {
+    const { rating, cur } = R;
+    const T = D.synthRopes;
+    const factor = D.rule("rope-wll").params.factor;
+    const winchKg = rating.ok ? rating.kg : null; // the most the winch can put in the rope: its rating, layer 1
+    const needKg = cur.rig.winchKg;
+    const maxKg = Math.max(...T.ropes.flatMap((r) => T.sizesMm.map((mm) => (r.t[mm] || 0) * 1000)), winchKg || 0) * 1.04;
+    const pct = (kg) => (kg / maxKg) * 100;
+    const marks = [
+      winchKg ? el("span", { class: "rp-mark rp-mark--winch", style: `left:${pct(winchKg)}%`, title: `Your winch's full pull: ${U.kg(winchKg)}` }) : null,
+      el("span", { class: "rp-mark rp-mark--need", style: `left:${pct(needKg)}%`, title: `This pull: ${U.kg(needKg)} in the rope` }),
+    ];
+
+    const rows = T.sizesMm.map((mm) => el("div", { class: "rp-size" },
+      el("span", { class: "rp-mm" }, `${mm} mm`),
+      el("div", { class: "rp-bars" }, T.ropes.map((r) => {
+        const t = r.t[mm];
+        if (t === null) return el("div", { class: "rp-row" }, el("span", { class: "rp-name" }, r.name), el("span", { class: "rp-none" }, "not in the maker's table"));
+        const kg = t * 1000;
+        return el("div", { class: "rp-row" },
+          el("span", { class: "rp-name" }, r.name),
+          el("span", { class: "rp-track" },
+            el("span", { class: "rp-fill rp-fill--" + r.id, style: `width:${pct(kg)}%` },
+              el("span", { class: "rp-wll rp-wll--" + r.id, style: `width:${100 / factor}%` })),
+            marks.map((m) => m && m.cloneNode(true))),
+          el("span", { class: "rp-val" }, el("strong", null, U.tonnes(t)), el("small", null, `WLL ${U.tonnes(t / factor)}`)));
+      }))));
+
+    const head = el("tr", null, el("th", { scope: "col" }, "Size"),
+      T.ropes.map((r) => [el("th", { scope: "col", class: "num" }, `${r.name} strength`), el("th", { scope: "col", class: "num" }, "WLL (÷ 5)"), winchKg ? el("th", { scope: "col", class: "num" }, "× your winch") : null]));
+    const body = T.sizesMm.map((mm) => el("tr", null,
+      el("th", { scope: "row" }, `${mm} mm`),
+      T.ropes.map((r) => r.t[mm] === null
+        ? [el("td", { class: "num muted" }, "–"), el("td", { class: "num muted" }, "–"), winchKg ? el("td", { class: "num muted" }, "–") : null]
+        : [el("td", { class: "num" }, U.tonnes(r.t[mm])), el("td", { class: "num" }, U.tonnes(r.t[mm] / factor)), winchKg ? el("td", { class: "num" }, `${U.n((r.t[mm] * 1000) / winchKg, 0.1)}×`) : null])));
+
+    $("ropes").replaceChildren(
+      el("p", { class: "panel-intro muted" }, "Two 12-strand Dyneema-type ropes at winch sizes, as their makers publish them: Southern Ropes' GP-12 (made in Cape Town) and Samson's AmSteel-Blue. Each bar is the rope's breaking strength (spliced); the solid part is its working load limit, the strength ÷ 5, which is Samson's guidance for rope in normal use."),
+      el("ul", { class: "rp-legend" },
+        T.ropes.map((r) => el("li", null, el("span", { class: "swatch rp-sw--" + r.id, "aria-hidden": "true" }), `${r.name} (${r.maker}), ${r.basis}`)),
+        el("li", null, el("span", { class: "swatch rp-sw--wll", "aria-hidden": "true" }), "solid: WLL, strength ÷ 5"),
+        winchKg ? el("li", null, el("span", { class: "rp-key rp-key--winch", "aria-hidden": "true" }), `your winch's full pull, ${U.kg(winchKg)}`) : null,
+        el("li", null, el("span", { class: "rp-key rp-key--need", "aria-hidden": "true" }), `this pull, ${U.kg(needKg)} in the rope`)),
+      el("div", { class: "rp-chart" }, rows),
+      el("div", { class: "table-wrap" }, el("table", { class: "limit-table rp-table" }, el("thead", null, head), el("tbody", null, body))),
+      el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high; the "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. Synthetic rope needs 10 wraps left on the drum (WARN). GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
+      U.sourcesLine(["synthetic-rope", "rope-wll", "min-wraps"])
     );
   }
 

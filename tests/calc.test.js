@@ -212,6 +212,21 @@
     near(s.wh, s.ah * 12, 1e-12, "watt-hours");
   });
 
+  test("synthetic rope table: every listed strength is a positive number, and stronger with size", () => {
+    const R = D.synthRopes;
+    R.ropes.forEach((rope) => {
+      let last = 0;
+      R.sizesMm.forEach((mm) => {
+        const t = rope.t[mm];
+        if (t === null) return;
+        if (!(t > last)) throw new Error(`${rope.name} ${mm} mm should be stronger than the size below`);
+        last = t;
+      });
+    });
+    eq(D.rule("rope-wll").params.factor, 5, "Samson's 5:1");
+    eq(D.rule("synthetic-rope").params, D.synthRopes, "the rule and the table are the same data");
+  });
+
   // ------------------------------------------------------------ winch rating as typed
   test("winch ratings read the way people write them", () => {
     const lb = (t) => Math.round(C.parseRating(t).lb);
