@@ -19,6 +19,9 @@
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let S = Object.assign({}, D.defaults, load());
+  // grounds that are no longer offered (an older visit's saved choice) fall back to the default
+  if (!C.ground(S.ground)) S.ground = D.defaults.ground;
+  if (S.proxy && !C.ground(S.proxy)) S.proxy = "";
   let R = null; // latest results
   let sceneView = null;
   let drumView = null;
@@ -154,6 +157,7 @@
     });
     bindNum("massKg", "massKg");
     bindNum("anchorM", "anchorM");
+    bindNum("anchorScene", "anchorM");
     bindNum("moveM", "moveM");
     bindNum("ropeLengthM", "ropeLengthM");
     $("winch").addEventListener("input", (e) => set({ winch: e.target.value }));
@@ -209,6 +213,7 @@
     $("massKg").value = S.massKg || "";
     $("winch").value = S.winch || "";
     $("anchorM").value = S.anchorM || "";
+    $("anchorScene").value = S.anchorM || "";
     $("moveM").value = S.moveM || "";
     $("ropeLengthM").value = S.ropeLengthM || "";
     $("gradeDeg").value = S.gradeDeg || 0;
@@ -231,6 +236,9 @@
     if (g && g.proxy) $("proxy-name").textContent = g.label.toLowerCase();
     const deg = numOr(S.gradeDeg, 0);
     $("grade-out").textContent = deg ? `${deg}° · ${U.n(Math.tan((deg * Math.PI) / 180) * 100, 1)}%` : "Flat";
+    ["anchorM", "anchorScene"].forEach((id) => {
+      if (document.activeElement !== $(id) && +$(id).value !== S.anchorM) $(id).value = S.anchorM || "";
+    });
     const ra = numOr(S.ropeAngleDeg, 0);
     angleView.set(ra);
     $("angle-out").textContent = ra ? `${ra}° · +${U.n((1 / Math.cos((ra * Math.PI) / 180) - 1) * 100, 1)}%` : "Straight";
@@ -238,10 +246,10 @@
     $("f-winch").classList.toggle("is-unclear", !R.rating.ok);
 
     if (res.incomplete) {
-      const pos = sceneView.update({ look: g ? g.look : "mud", bog: S.bog, slopeDir: S.slopeDir, gradeDeg: deg, parts: S.parts, loadKg: 0, segments: [], availKg: 0, status: "idle" });
+      const pos = sceneView.update({ look: g ? g.look : "mud", bog: S.bog, slopeDir: S.slopeDir, gradeDeg: deg, parts: S.parts, anchorM: S.anchorM, status: "idle" });
       place($("f-mass"), pos.massField);
       place($("f-winch"), pos.winchField);
-      $("tag-load").hidden = $("tag-winch").hidden = true;
+      place($("f-anchor-scene"), pos.anchorField);
       const v = $("verdict");
       v.className = "verdict verdict--info";
       v.replaceChildren(el("div", { class: "verdict-top" }, U.statusIcon("incomplete"), el("p", { class: "verdict-head" },
@@ -249,7 +257,6 @@
       ["gear", "readouts", "sizes", "stage-sources"].forEach((id) => $(id).replaceChildren());
       return;
     }
-    $("tag-load").hidden = false;
     renderScene(g, deg);
     renderVerdict();
     renderRig();
@@ -273,30 +280,19 @@
 
   // ------------------------------------------------------------ the scene
   function renderScene(g, deg) {
-    const { res, cur, ang } = R;
-    const share = 1 / cur.rig.advantage; // rope pull per kg of load on the vehicle
-    const segments = [res.groundKg, Math.max(res.gradeKg, 0), res.bogKg, ang.ropeKg - res.totalKg, res.marginKg];
-    const startAvail = cur.sim ? cur.sim.points[0].availKg : 0;
+    const { res, cur } = R;
     const pos = sceneView.update({
       look: (res.ground.used || g).look,
       bog: S.bog,
       slopeDir: S.slopeDir,
       gradeDeg: deg,
       parts: S.parts,
-      loadKg: cur.rig.winchKg,
-      segments: segments.map((v) => v * share),
-      availKg: startAvail,
+      anchorM: R.anchorM,
       status: { ok: "ok", close: "close", short: "short", rope: "short", rolls: "rolls", idle: "idle" }[cur.status],
     });
     place($("f-mass"), pos.massField);
     place($("f-winch"), pos.winchField);
-    place($("tag-load"), pos.load);
-    place($("tag-winch"), pos.winch);
-    $("tag-load").replaceChildren(...(res.rollsAlone
-      ? [el("span", null, "Downhill"), el("strong", null, "Rolls by itself")]
-      : [el("span", null, S.parts > 1 ? "Rope pull needed" : "Pull needed"), el("strong", null, U.kg(cur.rig.winchKg))]));
-    $("tag-winch").hidden = !startAvail;
-    if (startAvail) $("tag-winch").replaceChildren(el("span", null, `Winch, layer ${cur.sim.startLayer}`), el("strong", null, U.kg(startAvail)));
+    place($("f-anchor-scene"), pos.anchorField);
   }
   function place(node, p) {
     node.style.left = p.left + "%";
@@ -343,7 +339,7 @@
     // balance: the rope pull needed, made of the load's parts, against what the winch gives
     const share = 1 / cur.rig.advantage;
     const parts = [
-      { label: res.gradeKg < 0 ? "Ground" : "Ground", kg: res.groundKg * share, cls: "seg-1" },
+      { label: "Ground", kg: res.groundKg * share, cls: "seg-1" },
       { label: "Slope", kg: Math.max(res.gradeKg, 0) * share, cls: "seg-2" },
       { label: "Bogged to the chassis", kg: res.bogKg * share, cls: "seg-3" },
       { label: `Rope angle ${U.n(ang.angleDeg, 1)}°`, kg: (ang.ropeKg - res.totalKg) * share, cls: "seg-4" },

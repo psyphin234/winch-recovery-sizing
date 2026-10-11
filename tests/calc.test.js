@@ -57,11 +57,17 @@
     });
   });
 
-  test("snow and rock have no factor and have a gap entry", () => {
-    ["snow", "rock"].forEach((id) => {
-      eq(C.ground(id).gcf, null, id + " factor");
-      if (!D.gaps.find((g) => g.id === id)) throw new Error("no gap entry for " + id);
-    });
+  test("rock has no factor and has a gap entry; snow isn't offered", () => {
+    eq(C.ground("rock").gcf, null, "rock factor");
+    if (!D.gaps.find((g) => g.id === "rock")) throw new Error("no gap entry for rock");
+    eq(C.ground("snow"), null, "snow not offered");
+  });
+
+  test("the short ground list uses I4WDTA's own factors", () => {
+    const want = { road: 25, grass: 7, gravel: 5, sand: 4, mud: 3, clay: 2 };
+    Object.keys(want).forEach((id) => eq(C.ground(id).gcf, want[id], id));
+    // bogged to the axles in mud = I4WDTA's deep mud factor
+    eq(C.resistance({ massKg: 3000, ground: "mud", bog: "axles" }).gcf, 2, "mud to the axles");
   });
 
   test("scenarios use known grounds and give a result", () => {
@@ -84,9 +90,9 @@
   });
 
   test("bogged to the axles subtracts 1 from the factor, never below 1", () => {
-    eq(C.resistance({ massKg: 3000, ground: "drysand", bog: "axles" }).gcf, 3, "dry sand bogged");
-    eq(C.resistance({ massKg: 3000, ground: "mud-deep", bog: "axles" }).gcf, 1, "deep mud bogged");
-    near(C.resistance({ massKg: 3000, ground: "mud-deep", bog: "axles" }).groundKg, 3000, 1e-9, "deep mud bogged = full weight");
+    eq(C.resistance({ massKg: 3000, ground: "sand", bog: "axles" }).gcf, 3, "sand bogged");
+    eq(C.resistance({ massKg: 3000, ground: "clay", bog: "axles" }).gcf, 1, "clay bogged");
+    near(C.resistance({ massKg: 3000, ground: "clay", bog: "axles" }).groundKg, 3000, 1e-9, "clay bogged = full weight");
   });
 
   test("bogged to the chassis: no wheel rolls, so the full weight is added", () => {
@@ -109,9 +115,9 @@
     eq(r.totalKg, 0, "total");
   });
 
-  test("snow needs a nearest ground before it gives a figure", () => {
-    eq(C.resistance({ massKg: 3000, ground: "snow" }).incomplete, true, "no proxy");
-    const r = C.resistance({ massKg: 3000, ground: "snow", proxy: "gravel" });
+  test("rock needs a nearest ground before it gives a figure", () => {
+    eq(C.resistance({ massKg: 3000, ground: "rock" }).incomplete, true, "no proxy");
+    const r = C.resistance({ massKg: 3000, ground: "rock", proxy: "gravel" });
     eq(r.gcf, 5, "uses gravel's factor");
     eq(r.ground.isProxy, true, "flagged as the user's choice");
   });

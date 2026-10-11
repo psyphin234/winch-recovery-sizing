@@ -53,8 +53,6 @@
       <!-- 1. The stuck vehicle: side view, with the mass and winch typed onto it -->
       <div class="scene" id="scene">
         <div class="scene-pic" id="scene-pic">
-        <div class="scene-tag scene-tag--load" id="tag-load" aria-hidden="true"></div>
-        <div class="scene-tag scene-tag--winch" id="tag-winch" aria-hidden="true"></div>
         <div class="scene-fields">
           <label class="scene-field" id="f-mass">
             <span class="sf-label">Vehicle mass</span>
@@ -65,6 +63,10 @@
             <span class="sf-label">Your winch</span>
             <span class="sf-input"><input id="winch" type="text" autocomplete="off" spellcheck="false" placeholder="EW9500, 4.5 t…"></span>
             <span class="sf-hint" id="winch-read"></span>
+          </label>
+          <label class="scene-field scene-field--anchor" id="f-anchor-scene">
+            <span class="sf-label">Anchor</span>
+            <span class="sf-input"><input id="anchorScene" type="number" inputmode="decimal" min="1" step="1" autocomplete="off"><span>m away</span></span>
           </label>
         </div>
         </div>

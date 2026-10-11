@@ -74,23 +74,20 @@
 
   /*
    * Ground condition factors (GCF), I4WDTA after Sibly. The resistance on that
-   * ground is the vehicle's weight divided by the factor.
-   * Snow and rock: no published factor found (see gaps); the user picks the
-   * nearest published ground instead, and the page says it's their choice.
+   * ground is the vehicle's weight divided by the factor. The page offers a
+   * short list (owner's call): sand is I4WDTA's "loose dry sand"; mud is their
+   * "shallow mud", and deeper mud is the "How deep" setting (bogged to the axles
+   * in mud gives 2, their "deep mud" figure).
+   * Rock: no published factor (see gaps); the user picks the nearest ground.
    * `look` is only how the ground is drawn in the scene, not data.
    */
   const grounds = [
-    { id: "road", label: "Tar", gcf: 25, look: "road" },
-    { id: "gravel", label: "Gravel", gcf: 5, look: "gravel" },
-    { id: "grass", label: "Grass", gcf: 7, look: "grass" },
-    { id: "wetsand-hard", label: "Hard wet sand", gcf: 6, look: "wetsand" },
-    { id: "drysand", label: "Loose dry sand", gcf: 4, look: "sand" },
-    { id: "wetsand-loose", label: "Loose wet sand", gcf: 3, look: "wetsand" },
-    { id: "shingle", label: "Shingle", gcf: 3, look: "shingle" },
-    { id: "mud-shallow", label: "Shallow mud", gcf: 3, look: "mud" },
-    { id: "mud-deep", label: "Deep mud", gcf: 2, look: "deepmud" },
-    { id: "clay", label: "Soft clay", gcf: 2, look: "clay" },
-    { id: "snow", label: "Snow", gcf: null, proxy: true, look: "snow" },
+    { id: "road", label: "Tar", gcf: 25, look: "road", i4wdta: "Smooth road" },
+    { id: "gravel", label: "Gravel", gcf: 5, look: "gravel", i4wdta: "Gravel" },
+    { id: "grass", label: "Grass", gcf: 7, look: "grass", i4wdta: "Grass" },
+    { id: "sand", label: "Sand", gcf: 4, look: "sand", i4wdta: "Loose dry sand" },
+    { id: "mud", label: "Mud", gcf: 3, look: "mud", i4wdta: "Shallow mud" },
+    { id: "clay", label: "Soft clay", gcf: 2, look: "clay", i4wdta: "Soft clay" },
     { id: "rock", label: "Rock", gcf: null, proxy: true, look: "rock" },
   ];
 
@@ -136,7 +133,7 @@
       id: "ground-factor",
       category: "method",
       title: "Ground resistance",
-      summary: "The force to roll the vehicle over the ground is its weight divided by a ground condition factor (GCF): smooth road 25, grass 7, hard wet sand 6, gravel 5, loose dry sand 4, loose wet sand 3, shingle 3, shallow mud 3, deep mud 2, soft clay 2.",
+      summary: "The force to roll the vehicle over the ground is its weight divided by a ground condition factor (GCF). I4WDTA's list: smooth road 25, grass 7, hard wet sand 6, gravel 5, loose dry sand 4, loose wet sand 3, shingle 3, shallow mud 3, deep mud 2, soft clay 2. The page offers a shorter list: tar 25, grass 7, gravel 5, sand 4 (their loose dry sand), mud 3 (their shallow mud) and soft clay 2. Deeper mud is the \"How deep\" setting: bogged to the axles takes mud to 2, their deep mud figure.",
       quote: "Ground Condition [GC] = weight of vehicle ÷ GCF",
       sources: ["i4wdta", "sibly"],
       params: { grounds: grounds.filter((g) => g.gcf) },
@@ -289,7 +286,7 @@
     {
       id: "snow",
       title: "Snow",
-      text: "No published ground factor found for snow (it ranges from firm pack to deep powder). Pick the published ground it behaves most like; the page labels that as your choice.",
+      text: "Not offered: no published ground factor was found for snow, which ranges from firm pack to deep powder.",
     },
     {
       id: "rock",
@@ -312,14 +309,14 @@
   // masses are typical loaded 4x4s, not from a source.
   const scenarios = [
     { id: "grass", label: "Wet grass campsite", values: { massKg: 3000, ground: "grass", bog: "none", slopeDir: "up", gradeDeg: 0, parts: 1, anchorM: 20, moveM: 8, winch: "EW9500" } },
-    { id: "dune", label: "Dune climb, 20°", values: { massKg: 3300, ground: "drysand", bog: "none", slopeDir: "up", gradeDeg: 20, parts: 1, anchorM: 20, moveM: 12, winch: "EW9500" } },
-    { id: "mud", label: "Deep mud, to the axles", values: { massKg: 3200, ground: "mud-deep", bog: "axles", slopeDir: "up", gradeDeg: 10, parts: 2, anchorM: 10, moveM: 6, winch: "Zeon 10" } },
+    { id: "dune", label: "Dune climb, 20°", values: { massKg: 3300, ground: "sand", bog: "none", slopeDir: "up", gradeDeg: 20, parts: 1, anchorM: 20, moveM: 12, winch: "EW9500" } },
+    { id: "mud", label: "Mud, to the axles", values: { massKg: 3200, ground: "mud", bog: "axles", slopeDir: "up", gradeDeg: 10, parts: 2, anchorM: 10, moveM: 6, winch: "Zeon 10" } },
     { id: "chassis", label: "Clay, to the chassis", values: { massKg: 2900, ground: "clay", bog: "chassis", slopeDir: "up", gradeDeg: 5, parts: 3, anchorM: 7, moveM: 4, winch: "12000 lb" } },
     { id: "ledge", label: "Rock ledge, 35°", values: { massKg: 3100, ground: "rock", proxy: "road", bog: "none", slopeDir: "up", gradeDeg: 35, parts: 2, anchorM: 10, moveM: 3, winch: "4.5 t" } },
   ];
 
   // The defaults the page opens with (also an example, labelled as such).
-  const defaults = { massKg: 3000, ground: "mud-shallow", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, ropeAngleDeg: 0, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM, ropeType: "steel" };
+  const defaults = { massKg: 3000, ground: "mud", proxy: "", bog: "axles", slopeDir: "up", gradeDeg: 10, ropeAngleDeg: 0, parts: 1, anchorM: 15, moveM: 6, winch: "EW9500", ropeLengthM: zeon10.ropeLengthM, ropeType: "steel" };
 
   root.WINCH_DATA = {
     sources,

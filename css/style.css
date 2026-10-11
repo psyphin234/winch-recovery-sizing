@@ -1732,6 +1732,11 @@ select:focus {
 .sc-rope--back { stroke: #b9c3cc; }
 .sc-block { fill: #0b0d10; stroke: #e6ebef; stroke-width: 2.5; }
 .sc-blockstrap { stroke: #d1a54a; stroke-width: 4; }
+.sc-dimline { stroke: #9aa4ae; stroke-width: 1.5; }
+.sc-dimhead { fill: #9aa4ae; }
+.sc-dimtext { fill: var(--text); font-family: var(--font-body); font-size: 15px; font-weight: 600; }
+/* on wide screens the anchor field sits on the line, so its text label hides */
+.scene-pic:has(> .scene-fields) .sc-dimtext { display: none; }
 .sc-seg.seg-1 { fill: var(--series-1); }
 .sc-seg.seg-2 { fill: var(--series-2); }
 .sc-seg.seg-3 { fill: var(--series-3); }
@@ -1800,6 +1805,8 @@ select:focus {
 }
 
 .scene-field--winch { min-width: 180px; max-width: 220px; }
+.scene-field--anchor { min-width: 0; max-width: 130px; padding: 4px 9px 5px; }
+.scene-field--anchor .sf-input input { width: 2.6em; font-size: 1.15rem; }
 
 .scene-field.is-unclear { border-color: var(--warn); }
 
@@ -1885,6 +1892,9 @@ select:focus {
     min-width: 0;
     max-width: none;
   }
+
+  .scene > .scene-fields .scene-field--anchor { grid-column: 1 / -1; }
+  .scene > .scene-fields .scene-field--anchor .sf-input input { width: 5em; }
 
   .scene-tag { font-size: 0.62rem; padding: 2px 6px; }
   .scene-tag strong { font-size: 0.85rem; }

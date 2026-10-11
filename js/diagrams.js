@@ -1,7 +1,7 @@
 /*
  * diagrams.js: the page's pictures, built from calc.js results.
  *   scene       side view of the stuck vehicle, the winch and the anchor. Built once and
- *               updated in place, so slope, bogging and arrows animate between states.
+ *               updated in place, so slope and bogging animate between states.
  *   lineThumb   small picture of a single, double or triple line run (the rope picker)
  *   rigging     top view of the rope run: pull on each length, load on each block and the anchor
  *   drum        the drum in cross-section, one circle per wrap, filling as rope winds in
@@ -149,19 +149,18 @@
       [250, 396].map((x) => [svg("ellipse", { cx: x - 30, cy: PY, rx: 26, ry: 9 }), svg("ellipse", { cx: x + 30, cy: PY, rx: 26, ry: 9 })]));
     const ground = svg("g", { class: "sc-groundg" }, groundFill, mounds, blades, groundEdge);
 
-    // force arrows: drawn 100 units long, stretched by a CSS transform so they animate
-    const LOAD_X = 180;
-    const LOAD_Y = 214;
-    const WIN_X = 484;
-    const WIN_Y = 192;
-    const loadSegs = ["seg-1", "seg-2", "seg-3", "seg-4", "seg-margin"].map((c) => svg("rect", { y: -8, height: 16, class: "sc-seg " + c }));
-    const loadBar = svg("g", { class: "sc-arrow" }, loadSegs);
-    const loadHead = svg("path", { d: "M0 -14 L-18 0 L0 14 Z", class: "sc-arrow sc-head--load" });
-    const winBar = svg("g", { class: "sc-arrow" }, svg("rect", { x: 0, y: -6, width: 100, height: 12, class: "sc-winbar" }));
-    const winHead = svg("path", { d: "M0 -12 L16 0 L0 12 Z", class: "sc-arrow sc-head--winch" });
-    const arrows = svg("g", { class: "sc-arrows" }, loadBar, loadHead, winBar, winHead);
+    // the distance to the anchor, as a dimension line over the rope (not to scale)
+    const DIM_Y = 206;
+    const dimText = svg("text", { class: "sc-dimtext", x: 584, y: DIM_Y - 8, "text-anchor": "middle" }, "");
+    const dim = svg("g", { class: "sc-dim" },
+      svg("line", { x1: 478, y1: DIM_Y, x2: 694, y2: DIM_Y, class: "sc-dimline" }),
+      svg("line", { x1: 478, y1: DIM_Y - 7, x2: 478, y2: DIM_Y + 7, class: "sc-dimline" }),
+      svg("line", { x1: 694, y1: DIM_Y - 7, x2: 694, y2: DIM_Y + 7, class: "sc-dimline" }),
+      svg("path", { d: `M 478 ${DIM_Y} l 9 -4 v 8 Z`, class: "sc-dimhead" }),
+      svg("path", { d: `M 694 ${DIM_Y} l -9 -4 v 8 Z`, class: "sc-dimhead" }),
+      dimText);
 
-    const world = svg("g", { class: "sc-world" }, tree, ropes, vehicle, ground, arrows);
+    const world = svg("g", { class: "sc-world" }, tree, ropes, vehicle, ground, dim);
     const node = svg("svg", { class: "scene-svg", viewBox: `0 0 ${VW} ${VH}`, role: "img", "aria-label": "Side view of the stuck vehicle, its winch and the anchor tree" }, defs, backdrop, world);
 
     let st = { sink: SINK.none, scale: 1, angle: 0 };
@@ -185,8 +184,8 @@
     }
 
     /*
-     * s: { look, bog, slopeDir, gradeDeg, parts, loadKg, segments[5], availKg, status }
-     * Returns where the overlays go: the load and winch labels, the mass and winch inputs.
+     * s: { look, bog, slopeDir, gradeDeg, parts, anchorM, status }
+     * Returns where the overlays go: the mass, winch and anchor-distance inputs.
      */
     function update(s) {
       const deg = Math.max(0, Math.min(45, s.gradeDeg || 0));
@@ -202,31 +201,13 @@
       blades.style.opacity = LOOKS[look].blades ? 1 : 0;
       drawRopes(s.parts || 1);
 
-      // both arrows on one scale, so their lengths compare
-      const total = Math.max(s.loadKg || 0, 0);
-      const unit = 165 / Math.max(total, s.availKg || 0, 1); // the longest arrow stays inside the picture
-      let x = 0;
-      (s.segments || []).forEach((v, i) => {
-        const w = total > 0 ? (Math.max(v, 0) / total) * 100 : 0;
-        loadSegs[i].setAttribute("x", x);
-        loadSegs[i].setAttribute("width", Math.max(w - 0.8, 0));
-        x += w;
-      });
-      const Ll = Math.max(total * unit, 2);
-      loadBar.style.transform = `translate(${LOAD_X}px, ${LOAD_Y}px) scaleX(${-Ll / 100})`;
-      loadHead.style.transform = `translate(${LOAD_X - Ll}px, ${LOAD_Y}px)`;
-      loadBar.style.opacity = loadHead.style.opacity = total > 0 ? 1 : 0;
-      const Lw = s.availKg ? Math.max(s.availKg * unit, 2) : 0;
-      winBar.style.transform = `translate(${WIN_X}px, ${WIN_Y}px) scaleX(${Lw / 100})`;
-      winHead.style.transform = `translate(${WIN_X + Lw}px, ${WIN_Y}px)`;
-      winBar.style.opacity = winHead.style.opacity = Lw ? 1 : 0;
+      dimText.textContent = s.anchorM ? `${U.n(s.anchorM, 0.1)} m to the anchor` : "";
 
       node.setAttribute("class", "scene-svg sc--" + (s.status || "idle"));
       return {
-        load: toPercent(LOAD_X - Ll / 2, LOAD_Y - 30, false),
-        winch: toPercent(WIN_X + Lw / 2, WIN_Y + 24, false),
         massField: toPercent(318, 98, true),
         winchField: toPercent(568, 62, false),
+        anchorField: toPercent(584, DIM_Y, false),
       };
     }
 
