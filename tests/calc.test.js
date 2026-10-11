@@ -64,7 +64,7 @@
   });
 
   test("the short ground list uses I4WDTA's own factors", () => {
-    const want = { road: 25, grass: 7, gravel: 5, sand: 4, mud: 3, clay: 2 };
+    const want = { road: 25, grass: 7, gravel: 5, sand: 3, mud: 3, clay: 2 };
     Object.keys(want).forEach((id) => eq(C.ground(id).gcf, want[id], id));
     // bogged to the axles in mud = I4WDTA's deep mud factor
     eq(C.resistance({ massKg: 3000, ground: "mud", bog: "axles" }).gcf, 2, "mud to the axles");
@@ -90,7 +90,7 @@
   });
 
   test("bogged to the axles subtracts 1 from the factor, never below 1", () => {
-    eq(C.resistance({ massKg: 3000, ground: "sand", bog: "axles" }).gcf, 3, "sand bogged");
+    eq(C.resistance({ massKg: 3000, ground: "sand", bog: "axles" }).gcf, 2, "sand bogged");
     eq(C.resistance({ massKg: 3000, ground: "clay", bog: "axles" }).gcf, 1, "clay bogged");
     near(C.resistance({ massKg: 3000, ground: "clay", bog: "axles" }).groundKg, 3000, 1e-9, "clay bogged = full weight");
   });

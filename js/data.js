@@ -75,7 +75,7 @@
   /*
    * Ground condition factors (GCF), I4WDTA after Sibly. The resistance on that
    * ground is the vehicle's weight divided by the factor. The page offers a
-   * short list (owner's call): sand is I4WDTA's "loose dry sand"; mud is their
+   * short list (owner's call): sand is I4WDTA's "loose wet sand" (the cautious sand figure); mud is their
    * "shallow mud", and deeper mud is the "How deep" setting (bogged to the axles
    * in mud gives 2, their "deep mud" figure).
    * Rock: no published factor (see gaps); the user picks the nearest ground.
@@ -85,7 +85,7 @@
     { id: "road", label: "Tar", gcf: 25, look: "road", i4wdta: "Smooth road" },
     { id: "gravel", label: "Gravel", gcf: 5, look: "gravel", i4wdta: "Gravel" },
     { id: "grass", label: "Grass", gcf: 7, look: "grass", i4wdta: "Grass" },
-    { id: "sand", label: "Sand", gcf: 4, look: "sand", i4wdta: "Loose dry sand" },
+    { id: "sand", label: "Sand", gcf: 3, look: "sand", i4wdta: "Loose wet sand" },
     { id: "mud", label: "Mud", gcf: 3, look: "mud", i4wdta: "Shallow mud" },
     { id: "clay", label: "Soft clay", gcf: 2, look: "clay", i4wdta: "Soft clay" },
     { id: "rock", label: "Rock", gcf: null, proxy: true, look: "rock" },
@@ -133,7 +133,7 @@
       id: "ground-factor",
       category: "method",
       title: "Ground resistance",
-      summary: "The force to roll the vehicle over the ground is its weight divided by a ground condition factor (GCF). I4WDTA's list: smooth road 25, grass 7, hard wet sand 6, gravel 5, loose dry sand 4, loose wet sand 3, shingle 3, shallow mud 3, deep mud 2, soft clay 2. The page offers a shorter list: tar 25, grass 7, gravel 5, sand 4 (their loose dry sand), mud 3 (their shallow mud) and soft clay 2. Deeper mud is the \"How deep\" setting: bogged to the axles takes mud to 2, their deep mud figure.",
+      summary: "The force to roll the vehicle over the ground is its weight divided by a ground condition factor (GCF). I4WDTA's list: smooth road 25, grass 7, hard wet sand 6, gravel 5, loose dry sand 4, loose wet sand 3, shingle 3, shallow mud 3, deep mud 2, soft clay 2. The page offers a shorter list: tar 25, grass 7, gravel 5, sand 3 (their loose wet sand, the most cautious of their sand figures), mud 3 (their shallow mud) and soft clay 2. Deeper mud is the \"How deep\" setting: bogged to the axles takes mud to 2, their deep mud figure.",
       quote: "Ground Condition [GC] = weight of vehicle ÷ GCF",
       sources: ["i4wdta", "sibly"],
       params: { grounds: grounds.filter((g) => g.gcf) },
