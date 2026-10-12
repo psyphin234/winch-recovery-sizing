@@ -3079,3 +3079,42 @@ select:focus {
     display: none !important;
   }
 }
+
+/* ------------------------------------------------------------ danger: information only, judge it on the scene */
+.danger {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--fail) 55%, var(--border));
+  border-left: 6px solid var(--fail);
+  background: color-mix(in srgb, var(--fail) 9%, var(--surface));
+}
+
+.danger p { margin: 6px 0 0; max-width: 80ch; }
+
+.danger .danger-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--fail);
+}
+
+.danger-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--fail);
+  color: #0b0d10;
+  font-size: 1.1rem;
+}
+
+.verdict-warn { color: var(--text); font-weight: 600; }

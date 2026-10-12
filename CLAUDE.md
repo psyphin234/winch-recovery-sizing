@@ -10,6 +10,8 @@ Repo `psyphin234/winch-recovery-sizing` (public), GitHub Pages from `main` / roo
 
 Plain HTML/CSS/vanilla JS, classic scripts (no modules, no build step), so `index.html` opens straight from disk. Everything runs in the browser; inputs are only kept in the visitor's own `localStorage` (key `winch-calc-v2`).
 
+**Danger warnings (owner's requirement, 2026-10-12, as on the ropes page):** the red `.danger` box under the intro on both pages ("Winching can kill": information only, judgement on the scene comes first, a green tick isn't a go-ahead), the line under every verdict, the disclaimer (no liability) and the footer. The box links the `stand-clear` rule (WARN, Samson). Keep them.
+
 **Status: UNDER CONSTRUCTION.** Both pages carry the amber `.construction` banner and `<meta name="robots" content="noindex">`. Keep both until the owner says otherwise.
 
 ## Source policy (owner's rule, non-negotiable)

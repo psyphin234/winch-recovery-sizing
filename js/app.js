@@ -263,7 +263,7 @@
     renderPlay();
     renderSizes();
     renderRopes();
-    $("stage-sources").replaceChildren(U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "line-angle", "safety-margin", "mechanical-advantage", "sheave-friction", "layer-pull", "min-wraps", "winch-chart", "power", "engine-running", "winch-size", "shackle-ratings"]));
+    $("stage-sources").replaceChildren(U.sourcesLine(["stand-clear", "ground-factor", "bogged-axles", "bogged-chassis", "gradient", "line-angle", "safety-margin", "mechanical-advantage", "sheave-friction", "layer-pull", "min-wraps", "winch-chart", "power", "engine-running", "winch-size", "shackle-ratings"]));
   }
 
   function ratingText(r) {
@@ -368,7 +368,8 @@
       `To move it takes ${U.kg(res.totalKg)}, ${Math.round((res.totalKg / res.massKg) * 100)}% of its ${U.kg(res.massKg)}${S.parts > 1 ? `; ${S.parts} lengths of rope share that, less 8% friction per block` : ""}.`,
       ang.angleDeg > 0.5 ? ` With the rope ${U.n(ang.angleDeg, 1)}° off its path, the rope must pull ${U.kg(ang.ropeKg)} to move it, and pulls it ${U.kg(ang.sideKg)} sideways: that load goes into the tyres, the fairlead and the winch mount.` : "",
       res.ground.isProxy ? ` ${res.ground.chosen.label} is worked out as ${res.ground.used.label.toLowerCase()}: your choice, not a source.` : "",
-      res.beyondMethod ? " Steeper than 45° is beyond I4WDTA's method." : "");
+      res.beyondMethod ? " Steeper than 45° is beyond I4WDTA's method." : "",
+      el("strong", { class: "verdict-warn" }, " For information only: whatever this says, judge the recovery on the scene."));
 
     let fixEl = null;
     if (fix && fix.patch) {
