@@ -1,6 +1,6 @@
-# Winch & Recovery Sizing
+# Winch Planning and Sizing
 
-Static calculator for 4x4 **winching**, part of the PsyPhin site: the pull it takes to winch a stuck vehicle out, what double and triple lines do, how a winch copes as rope piles onto the drum, the current it draws along the way, the rigging ratings, and the winch size. Started 2026-10-11; redesigned the same day (owner: "a lot less complicated looking", inputs on the diagrams, animated, one page).
+Static calculator for 4x4 **winching**, part of the PsyPhin site: the pull it takes to winch a stuck vehicle out, what double and triple lines do, how a winch copes as rope piles onto the drum, the current it draws along the way, the rigging ratings, and the winch size. Named **Winch Planning and Sizing** since 2026-10-12 (owner's call; first "Winch & Recovery Sizing"): page title, header, Open Graph title and the psyphin.co.za card all use it. Started 2026-10-11; redesigned the same day (owner: "a lot less complicated looking", inputs on the diagrams, animated, one page).
 
 **Winching only.** Straps and kinetic recovery are for a separate page the owner will do later. Their rules (Australian strap standard, Bushranger's strap sheet, the kinetic spring model, kinetic rope stretch), and the battery/cable electrics (SAE J537, IEC 60028), were removed on 2026-10-11 and are in git history (commit 8565449 and before) to reuse.
 

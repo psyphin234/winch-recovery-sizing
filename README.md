@@ -1,4 +1,4 @@
-# Winch & Recovery Sizing
+# Winch Planning and Sizing
 
 How much pull it takes to winch a stuck 4x4 out, what double and triple line pulls do, how your winch copes as rope piles onto the drum, the current it draws on the way, and the block and shackle ratings to match. You set it up on animated pictures.
 

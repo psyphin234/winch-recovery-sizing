@@ -314,9 +314,13 @@
         g.appendChild(svg("g", { class: "rg-sheave" },
           svg("circle", { class: "rg-block", cx: bx, cy, r: 9 }),
           svg("line", { class: "rg-axle", x1: bx - 5, y1: cy, x2: bx + 5, y2: cy })));
-        // label: under an anchor-side block (clear of the ropes, even when they slope), over the vehicle for a vehicle-side one
-        if (p.at === "anchor") g.appendChild(svg("text", { class: "rg-blocklabel", x: bx, y: B.y + 22, "text-anchor": "middle" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
-        else g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg)));
+        // label: to the left of the block, between the ropes it turns (the anchor's label sits under the tree).
+        // On phones the anchor-distance box covers that spot, so an anchor-side block's label goes just under
+        // its lower rope; with the ropes at an angle, under the block (the anchor's label is then above the tree)
+        const text = (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg);
+        if (p.at === "anchor" && angled) g.appendChild(svg("text", { class: "rg-blocklabel", x: bx, y: B.y + 22, "text-anchor": "middle" }, text));
+        else if (p.at === "anchor" && narrow) g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: B.y + 20, "text-anchor": "end" }, text));
+        else g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, text));
       } else if (p.at === "vehicle") {
         const e = P(xVeh + 8, yOf(n - 1));
         g.appendChild(svg("circle", { class: "rg-end", cx: e.x, cy: e.y, r: 5 }));

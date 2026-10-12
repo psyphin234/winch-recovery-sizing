@@ -1,4 +1,4 @@
-/* Winch & Recovery Sizing. Colours follow psyphin.co.za (css/style.css there);
+/* Winch Planning and Sizing. Colours follow psyphin.co.za (css/style.css there);
    based on the SA Towing Check stylesheet, so the tools look the same. */
 :root {
   --bg: #020203;
@@ -1620,7 +1620,7 @@ select:focus {
   }
 }
 
-/* ============================================================ Winch & Recovery Sizing additions */
+/* ============================================================ Winch Planning and Sizing additions */
 
 /* ------------------------------------------------------------ under construction (same as the tyre calculator) */
 .construction {
