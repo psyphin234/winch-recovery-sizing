@@ -2994,7 +2994,59 @@ select:focus {
 .tag--maker { color: var(--maker); }
 .tag--standard { color: var(--pass); }
 .tag--engineering { color: #5eead4; }
+.tag--tree { color: #a3e635; }
 .tag--calc { color: var(--warn); border-style: dashed; }
+
+/* ------------------------------------------------------------ tree protector */
+.tree {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 760px) {
+  .tree { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+
+.tree figure { margin: 0; }
+.tree figcaption { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+
+.tree-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.tree-draw {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.tp-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tp-svg { display: block; width: 100%; height: auto; }
+
+@media (max-width: 520px) {
+  .tp-pair { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .tp-svg { max-width: 260px; }
+}
+.tp-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 4; }
+.tp-strap { fill: none; stroke: #d1a54a; stroke-width: 6; stroke-linejoin: round; }
+.tp-rope { fill: none; stroke: #e6ebef; stroke-width: 2.2; stroke-linejoin: round; }
+.tp-hook { fill: #e6ebef; }
+.tp-shackle { fill: none; stroke: var(--maker); stroke-width: 3; }
+.tp-scrape { fill: none; stroke: var(--fail); stroke-width: 4; stroke-dasharray: 3 3; }
+.tp-head { font: 700 13px var(--font-body); fill: var(--pass); }
+.tp-head--bad { fill: var(--fail); }
+.tp-lbl { font: 11px var(--font-body); fill: var(--text-muted); }
+.tp-lbl--bad { fill: var(--fail); }
+.tp-lbl--tree { fill: #cfe3cf; font-weight: 600; }
+
+.tree-text { margin-top: 14px; }
+.tree-text p { margin: 0 0 10px; max-width: 72ch; }
 
 /* ------------------------------------------------------------ motion off when asked */
 @media (prefers-reduced-motion: reduce) {

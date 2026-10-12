@@ -16,6 +16,7 @@
     { category: "maker", title: "Manufacturers", intro: "Figures and practice published by winch, rigging and rope makers. Your own gear's label or manual beats these." },
     { category: "standard", title: "Standards", intro: "Standards and mandatory product-safety rules." },
     { category: "engineering", title: "Engineering practice", intro: "Practice from engineering bodies." },
+    { category: "horticulture", title: "Tree care", intro: "What bark damage does to a tree, from a horticultural body." },
     { category: "calculation", title: "This site's calculations", intro: "Plain physics (statics, energy, electrical resistance) applied by this site. Not from a source as such, so they're listed separately and labelled where they're used." },
   ];
 

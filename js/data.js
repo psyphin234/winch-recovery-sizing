@@ -7,6 +7,7 @@
  *   method      - a published recovery method from a training body (I4WDTA)
  *   maker       - a winch or rigging manufacturer's published figure
  *   engineering - an engineering body's practice (LEEA)
+ *   horticulture - a horticultural body's advice on tree damage (RHS)
  *   calculation - this site's own physics; says so wherever it is shown
  *
  * Source policy: engineering, standards, manufacturers' data and published
@@ -79,6 +80,16 @@
       label: "Samson Rope, Warning statement (working loads and safety factors)",
       url: "https://www.samsonrope.com/warning-statement",
       kind: "maker",
+    },
+    warnRigging: {
+      label: "WARN Industries, Basic Guide to Winching (rigging, anchors, safety)",
+      url: "https://www.warn.com/basic-guide-to-winch-rigging",
+      kind: "maker",
+    },
+    rhsRingBarking: {
+      label: "RHS (Royal Horticultural Society), Ring-barking: causes and solutions",
+      url: "https://www.rhs.org.uk/plants/types/trees/ring-barking",
+      kind: "horticulture",
     },
     physics: {
       label: "Physics (statics): this site's own calculation",
@@ -337,6 +348,26 @@
       sources: ["crosby"],
       params: { shackles: shackles, designFactor: 6, proofFactor: 2 },
       checked: "2026-10-11",
+    },
+    {
+      id: "tree-protector",
+      category: "maker",
+      title: "Tree protector on the anchor",
+      summary: "WARN: a tree trunk protector is a strap, typically tough nylon, that goes round the anchor and gives the winch rope something to attach to, and it protects living trees. Put it round the anchor (on a tree, as low as possible), join its two ends with a shackle through the rope's hook loop, and tighten the shackle pin, then back it off half a turn. Never wrap the winch rope round the anchor and back onto itself. Be certain the anchor will take the load and the strap won't slip, and pick one that lets you pull straight in the direction the vehicle has to move.",
+      quote: "Provides an attachment point for the winch rope to a wide variety of anchor points and protects living trees. ... Never wrap winch rope back onto itself. Use a choker chain or tree trunk protector on the anchor.",
+      sources: ["warnRigging"],
+      params: { pinBackOffTurns: 0.5 },
+      checked: "2026-10-12",
+    },
+    {
+      id: "ring-barking",
+      category: "horticulture",
+      title: "Ring-barking",
+      summary: "The RHS: ring-barking, or girdling, is losing the bark all or nearly all the way round a trunk or limb. That disrupts the flow of water and nutrients (the sap) between the roots and the top of the tree, and untreated it can make the tree die back or die. A recently damaged tree may not show it at first. Where some of the cambium and phloem under the bark is left, the tree may recover. Careless use of machinery close to trees is one of the main causes they list.",
+      quote: "Ring-barking or girdling are terms used to describe the complete or nearly complete loss of bark from around the circumference of a tree or shrub’s limb or trunk. This disrupts the movement of water and nutrients between the roots and the top growth (sap flow). If untreated it can result in dieback or death of the affected plant.",
+      sources: ["rhsRingBarking"],
+      params: {},
+      checked: "2026-10-12",
     },
   ];
 

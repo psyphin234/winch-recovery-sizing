@@ -181,6 +181,7 @@
       startPlay();
     });
 
+    renderTree();
     renderExplainers();
     syncInputs();
 
@@ -253,7 +254,7 @@
       v.className = "verdict verdict--info";
       v.replaceChildren(el("div", { class: "verdict-top" }, U.statusIcon("incomplete"), el("p", { class: "verdict-head" },
         res.reason === "mass" ? "Type the vehicle's mass on the vehicle." : res.reason === "ground" ? "Pick the ground it's on." : `Pick the ground ${g.label.toLowerCase()} behaves most like.`)));
-      ["gear", "readouts", "sizes", "stage-sources"].forEach((id) => $(id).replaceChildren());
+      ["gear", "readouts", "sizes", "stage-sources", "tree-load"].forEach((id) => $(id).replaceChildren());
       return;
     }
     renderScene(g, deg);
@@ -412,7 +413,7 @@
     cur.rig.points.forEach((p, i) => {
       if (p.kind === "block") items.push({ name: `Block ${i + 1}`, where: p.at === "anchor" ? "at the anchor" : "on the vehicle", kg: p.loadKg });
     });
-    items.push({ name: "Tree protector", where: "and the anchor", kg: cur.rig.anchorKg });
+    items.push({ name: "Tree protector", where: "and the anchor", kg: cur.rig.anchorKg, more: "#tree-part" });
     const end = cur.rig.points[cur.rig.points.length - 1];
     if (end.at === "vehicle") items.push({ name: "Rope end", where: "on a recovery point", kg: end.loadKg });
     // two figures per piece: what this pull puts on it, and what to rate it for (the winch at full pull)
@@ -423,12 +424,15 @@
       const full = it.kg * scale;
       const sh = C.shackleFor(full);
       return el("li", { class: "gear-item" },
-        el("span", { class: "gear-name" }, it.name, el("small", null, it.where)),
+        el("span", { class: "gear-name" }, it.name, el("small", null, it.where, it.more ? [" · ", el("a", { href: it.more }, "what it is")] : null)),
         el("span", { class: "gear-load" }, el("small", null, "this pull"), U.kg(it.kg)),
         el("span", { class: "gear-rate" }, el("strong", null, `Rate it for ${U.kg(full)}`), el("small", null, why)),
         el("span", { class: "gear-shackle" + (sh ? "" : " is-over") }, sh ? `${sh.size} shackle` : "Over 8.5 t", el("small", null, sh ? `${U.tonnes(sh.wllT)} WLL (Crosby)` : "rated rigging only")));
     }));
     $("gear-note").textContent = `Each piece carries the first figure in this pull. Rate it for the second: if the vehicle snags or digs in, the winch can pull its full rating, and the blocks multiply that just as they multiply this pull.`;
+    $("tree-load").replaceChildren(
+      el("strong", null, "What it must hold. "),
+      `In this pull the tree protector holds ${U.kg(cur.rig.anchorKg)}. Rate it for ${U.kg(cur.rig.anchorKg * scale)}, ${why}, and use a shackle rated for that too (the list under the rope diagram above). The tree itself must take that pull without moving: WARN says to be certain the anchor will take the load.`);
   }
 
   // ------------------------------------------------------------ the pull, metre by metre
@@ -712,6 +716,20 @@
       el("div", { class: "table-wrap" }, el("table", { class: "limit-table rp-table" }, el("thead", null, head), el("tbody", null, body))),
       el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high; the "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. WARN says to leave 10 wraps of synthetic rope on the drum; the page keeps 5 throughout. GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
       U.sourcesLine(["synthetic-rope", "rope-wll", "min-wraps"])
+    );
+  }
+
+  // ------------------------------------------------------------ tree protector: what it is and why
+  function renderTree() {
+    const turns = D.rule("tree-protector").params.pinBackOffTurns;
+    const p = (title, ...text) => el("p", null, el("strong", null, title + " "), ...text);
+    $("tree-text").replaceChildren(
+      p("What it is.", "A short, wide strap (WARN: typically tough, high-quality nylon) that goes round the anchor tree. Its two ends are joined with a shackle, and the winch hook, or a snatch block, goes on the shackle. WARN describes it as giving the winch rope an attachment point on a wide variety of anchors, and as protecting living trees."),
+      p("Why: the tree.", "A bare winch rope pulled tight round a trunk bears on a narrow strip of bark. Bark lost all or nearly all the way round a trunk is what the RHS (Royal Horticultural Society) calls ring-barking, or girdling: it cuts the flow of sap between the roots and the top of the tree, and untreated it can make the tree die back or die. It may not show at first. Where some of the living layers under the bark (the cambium and phloem) are left, the tree may recover."),
+      p("Why: your rope.", "WARN: never wrap the winch rope back onto itself; use a tree trunk protector or a choker chain on the anchor."),
+      el("p", null, el("strong", null, "How to rig it (WARN). "), `Put it round the tree as low as possible. Join its two ends with a shackle through the hook loop; tighten the pin, then back it off ${turns === 0.5 ? "half a turn" : U.n(turns, 0.01) + " turn"}. Make sure the strap won't slip. Pick a tree that lets you pull straight in the direction the vehicle has to move.`),
+      el("p", { id: "tree-load" }),
+      U.sourcesLine(["tree-protector", "ring-barking"])
     );
   }
 

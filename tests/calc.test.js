@@ -32,7 +32,7 @@
 
   // ------------------------------------------------------------ data integrity
   test("every rule has its fields and known sources", () => {
-    const cats = ["method", "maker", "engineering", "calculation"];
+    const cats = ["method", "maker", "engineering", "horticulture", "calculation"];
     D.rules.forEach((r) => {
       ["id", "category", "title", "summary", "checked"].forEach((f) => {
         if (!r[f]) throw new Error(r.id + " missing " + f);

@@ -58,6 +58,7 @@
     maker: { label: "Manufacturer", cls: "tag--maker" },
     standard: { label: "Standard", cls: "tag--standard" },
     engineering: { label: "Engineering", cls: "tag--engineering" },
+    horticulture: { label: "Tree care", cls: "tag--tree" },
     calculation: { label: "Calculation", cls: "tag--calc" },
   };
   function categoryTag(category) {
