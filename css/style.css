@@ -3036,7 +3036,9 @@ select:focus {
 .tp-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 4; }
 .tp-strap { fill: none; stroke: #d1a54a; stroke-width: 6; stroke-linejoin: round; }
 .tp-rope { fill: none; stroke: #e6ebef; stroke-width: 2.2; stroke-linejoin: round; }
-.tp-hookj { fill: none; stroke: #e6ebef; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.tp-hookb { fill: #e6ebef; stroke: #181c21; stroke-width: 1.2; stroke-linejoin: round; }
+.tp-hooke { fill: none; stroke: #e6ebef; stroke-width: 3.5; }
+.tp-latch { stroke: #7b8590; stroke-width: 2; stroke-linecap: round; }
 .tp-ring { fill: color-mix(in srgb, var(--fail) 14%, transparent); stroke: var(--fail); stroke-width: 2; stroke-dasharray: 4 3; }
 .tp-lead { stroke: var(--fail); stroke-width: 1.5; }
 .tp-lead--good { stroke: var(--pass); }
