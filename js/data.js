@@ -342,8 +342,8 @@
     {
       id: "stand-clear",
       category: "maker",
-      title: "Stand clear of the rope, damper on it",
-      summary: "WARN: always stand clear of the winch rope and the load, and keep others away while winching; never touch the rope or hook while it's under tension. WARN also says to put a winch damper (or a heavy blanket) on the rope midway between the winch and the anchor, before the rope takes the load, to help stop recoil if the rope fails. Samson: never stand in line with, or in the general path of, a rope under tension, because of the risk of injury from recoil.",
+      title: "Stand clear of the rope",
+      summary: "WARN: always stand clear of the winch rope and the load, and keep others away while winching; never touch the rope or hook while it's under tension. Samson: never stand in line with, or in the general path of, a rope under tension, because of the risk of injury from recoil.",
       quote: "Always stand clear of winch rope and load and keep others away while winching. … Never stand in line with or in the general path of rope under tension to avoid the risk of injury caused by recoil.",
       sources: ["warnRigging", "samsonWarning"],
       params: {},

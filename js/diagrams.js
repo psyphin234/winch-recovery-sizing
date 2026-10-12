@@ -314,13 +314,24 @@
         g.appendChild(svg("g", { class: "rg-sheave" },
           svg("circle", { class: "rg-block", cx: bx, cy, r: 9 }),
           svg("line", { class: "rg-axle", x1: bx - 5, y1: cy, x2: bx + 5, y2: cy })));
-        // label: to the left of the block, between the ropes it turns (the anchor's label sits under the tree).
-        // On phones the anchor-distance box covers that spot, so an anchor-side block's label goes just under
-        // its lower rope; with the ropes at an angle, under the block (the anchor's label is then above the tree)
-        const text = (narrow ? "" : "Block " + j + ": ") + U.kg(p.loadKg);
-        if (p.at === "anchor" && angled) g.appendChild(svg("text", { class: "rg-blocklabel", x: bx, y: B.y + 22, "text-anchor": "middle" }, text));
-        else if (p.at === "anchor" && narrow) g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: B.y + 20, "text-anchor": "end" }, text));
-        else g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, text));
+        // label: left of the block, between the ropes it turns. For an anchor-side block: with the rope angled,
+        // under the block (the anchor's label is then above the tree), except on a triple line, whose rope end
+        // and strap sit there: just under its lower rope, tilted with it. On phones the anchor-distance box
+        // covers the spot between the ropes, so just under the lower rope there too.
+        const text = (narrow || span < 160 ? "" : "Block " + j + ": ") + U.kg(p.loadKg);
+        const endStrap = n % 2 === 1; // odd line counts end at the anchor, with a strap to the tree
+        // Under the block it goes to the right, clear of the anchor-distance box (~7 px a character). At small
+        // angles that spot is on the "way it must move" line: then between the ropes, or on phones not at all
+        // (on a double line the anchor block carries the anchor's load, which is shown right beside it).
+        const onWayLine = B.y + 22 > yOf(n - 1) - 6;
+        if (p.at === "anchor" && angled && !endStrap && !onWayLine) g.appendChild(svg("text", { class: "rg-blocklabel", x: Math.min(bx - 6, W - 4 - text.length * 7), y: B.y + 22, "text-anchor": "start" }, text));
+        else if (p.at === "anchor" && angled && !endStrap && narrow) { /* shown as the anchor's load */ }
+        else if (p.at === "anchor" && angled && !endStrap) g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, text));
+        else if (p.at === "anchor" && (angled || narrow)) {
+          // the same clearance from the rope, measured square to it, at any angle
+          const L = P(bx - 20, yOf(j) + 21 / Math.cos((deg * Math.PI) / 180));
+          g.appendChild(svg("text", { class: "rg-blocklabel", x: L.x, y: L.y, "text-anchor": "end", transform: angled ? `rotate(${-deg} ${L.x} ${L.y})` : null }, text));
+        } else g.appendChild(svg("text", { class: "rg-blocklabel", x: bx - 16, y: cy + 5, "text-anchor": "end" }, text));
       } else if (p.at === "vehicle") {
         const e = P(xVeh + 8, yOf(n - 1));
         g.appendChild(svg("circle", { class: "rg-end", cx: e.x, cy: e.y, r: 5 }));
@@ -342,7 +353,7 @@
       ? "Single line: the winch pulls the full load, and the anchor takes the same."
       : `${n} lengths of rope pull on the vehicle. Each block loses 8% to friction (LEEA), so the winch pulls ${U.kg(rig.winchKg)}, not ${U.kg(rig.anchorKg / n)}. The anchor still takes the full ${U.kg(rig.anchorKg)}.`) +
       (angled ? ` The rope is ${Math.round(deg)}° off the way the vehicle must move.` : "");
-    const at = P(xVeh + span * 0.66, yOf(0));
+    const at = P(xVeh + span * (narrow ? 0.5 : 0.66), yOf(0)); // on phones, clear of the anchor's figures
     return {
       el: svg("svg", { class: "rigging-svg", viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": caption }, g),
       caption,
