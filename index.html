@@ -189,33 +189,38 @@
           <figure class="tree-draw">
             <div class="tp-pair">
               <svg class="tp-svg" viewBox="0 0 175 165" role="img" aria-labelledby="tp-good-title">
-                <title id="tp-good-title">Right, seen from above: a tree protector strap round the tree, its two ends joined by a shackle, the winch rope hooked to the shackle.</title>
-                <text class="tp-head" x="4" y="14">&#10003; Tree protector</text>
-                <line class="tp-rope" x1="0" y1="92" x2="48" y2="92"/>
-                <path class="tp-hook" d="M48 86 l9 6 l-9 6 z"/>
-                <path class="tp-strap" d="M60 92 L112 65 A30 30 0 1 1 112 119 Z"/>
+                <title id="tp-good-title">Right, seen from above: a tree protector strap round the tree, its two ends joined by a shackle, and the winch rope's hook on the shackle.</title>
+                <text class="tp-head" x="4" y="14">&#10003; Hook on a shackle</text>
+                <line class="tp-rope" x1="0" y1="92" x2="44" y2="92"/>
+                <path class="tp-hookj" d="M40 92 H46 Q50 92 52 97 Q54 103 59 102 Q64 100 62 93"/>
+                <path class="tp-strap" d="M66 92 L112 65 A30 30 0 1 1 112 119 Z"/>
                 <circle class="tp-tree" cx="125" cy="92" r="24"/>
-                <path class="tp-shackle" d="M52 86 h7 a6 6 0 0 1 0 12 h-7"/>
+                <path class="tp-shackle" d="M70 85 h-9 a7 7 0 0 0 0 14 h9 M70 82 v20"/>
                 <text class="tp-lbl" x="170" y="40" text-anchor="end">wide strap round the tree</text>
                 <text class="tp-lbl" x="2" y="80">winch rope</text>
-                <text class="tp-lbl" x="30" y="142">shackle joins</text>
-                <text class="tp-lbl" x="30" y="155">both ends</text>
+                <line class="tp-lead tp-lead--good" x1="58" y1="106" x2="44" y2="128"/>
+                <text class="tp-lbl tp-lbl--good" x="2" y="140">hook on the shackle,</text>
+                <text class="tp-lbl" x="2" y="154">which joins the strap's ends</text>
                 <text class="tp-lbl tp-lbl--tree" x="125" y="96" text-anchor="middle">tree</text>
               </svg>
               <svg class="tp-svg" viewBox="0 0 175 165" role="img" aria-labelledby="tp-bad-title">
-                <title id="tp-bad-title">Wrong, seen from above: the winch rope wrapped round the tree, bare on the bark, and hooked back onto itself.</title>
-                <text class="tp-head tp-head--bad" x="4" y="14">&#10005; Rope round the tree</text>
+                <title id="tp-bad-title">Wrong, seen from above: the winch rope wrapped round the tree, bare on the bark, and its hook clipped back onto its own rope.</title>
+                <text class="tp-head tp-head--bad" x="4" y="14">&#10005; Hook on its own rope</text>
                 <circle class="tp-tree" cx="125" cy="92" r="24"/>
                 <path class="tp-scrape" d="M114 70.7 A24 24 0 1 1 114 113.3"/>
-                <path class="tp-rope" d="M0 92 L60 92 L112 68.3 A27 27 0 1 1 112 115.7 L64 95"/>
-                <path class="tp-hook" d="M64 89 l-9 6 l9 3 z"/>
+                <path class="tp-rope" d="M0 92 H58 L112 68.3 A27 27 0 1 1 112 115.7 L66 104"/>
+                <path class="tp-hookj" d="M66 104 L57 101 Q45 98 45 90 Q46 82 52 82 Q59 83 58 89"/>
+                <line class="tp-rope" x1="42" y1="92" x2="60" y2="92"/>
+                <circle class="tp-ring" cx="52" cy="92" r="15"/>
                 <text class="tp-lbl tp-lbl--bad" x="170" y="40" text-anchor="end">bare rope on the bark</text>
-                <text class="tp-lbl" x="2" y="142">hooked back</text>
-                <text class="tp-lbl" x="2" y="155">on itself</text>
+                <text class="tp-lbl" x="2" y="70">winch rope</text>
+                <line class="tp-lead" x1="44" y1="105" x2="34" y2="128"/>
+                <text class="tp-lbl tp-lbl--bad tp-lbl--strong" x="2" y="140">hook clipped back</text>
+                <text class="tp-lbl tp-lbl--bad tp-lbl--strong" x="2" y="154">onto its own rope</text>
                 <text class="tp-lbl tp-lbl--tree" x="125" y="96" text-anchor="middle">tree</text>
               </svg>
             </div>
-            <figcaption>Seen from above. WARN: never wrap the winch rope back onto itself; use a tree trunk protector (or a choker chain) on the anchor.</figcaption>
+            <figcaption>Seen from above. Wrong: the rope goes round the tree and its hook is clipped back onto the rope itself. WARN: never wrap the winch rope back onto itself; use a tree trunk protector (or a choker chain) on the anchor.</figcaption>
           </figure>
           <div class="tree-text" id="tree-text"></div>
           </div>

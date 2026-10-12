@@ -3036,13 +3036,18 @@ select:focus {
 .tp-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 4; }
 .tp-strap { fill: none; stroke: #d1a54a; stroke-width: 6; stroke-linejoin: round; }
 .tp-rope { fill: none; stroke: #e6ebef; stroke-width: 2.2; stroke-linejoin: round; }
-.tp-hook { fill: #e6ebef; }
+.tp-hookj { fill: none; stroke: #e6ebef; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.tp-ring { fill: color-mix(in srgb, var(--fail) 14%, transparent); stroke: var(--fail); stroke-width: 2; stroke-dasharray: 4 3; }
+.tp-lead { stroke: var(--fail); stroke-width: 1.5; }
+.tp-lead--good { stroke: var(--pass); }
 .tp-shackle { fill: none; stroke: var(--maker); stroke-width: 3; }
 .tp-scrape { fill: none; stroke: var(--fail); stroke-width: 4; stroke-dasharray: 3 3; }
 .tp-head { font: 700 13px var(--font-body); fill: var(--pass); }
 .tp-head--bad { fill: var(--fail); }
 .tp-lbl { font: 11px var(--font-body); fill: var(--text-muted); }
 .tp-lbl--bad { fill: var(--fail); }
+.tp-lbl--good { fill: var(--pass); }
+.tp-lbl--strong { font-weight: 600; }
 .tp-lbl--tree { fill: #cfe3cf; font-weight: 600; }
 
 .tree-text { margin-top: 14px; }
