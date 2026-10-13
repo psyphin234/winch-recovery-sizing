@@ -12,6 +12,8 @@ Plain HTML/CSS/vanilla JS, classic scripts (no modules, no build step), so `inde
 
 **Danger warnings (owner's requirement, 2026-10-12, as on the ropes page):** the red `.danger` box under the intro on both pages ("Winching can kill": information only, judgement on the scene comes first, a green tick isn't a go-ahead; kept compact at the owner's request, 2026-10-13, like the ropes page: those points stay visible, the detail folds into "Why, and what to do"), the line under every verdict, the disclaimer (no liability) and the footer. The box links the `stand-clear` rule (WARN, Samson). Keep them.
 
+**Inputs vs worked-out figures (owner, 2026-10-13):** everything the visitor can change is blue: typed fields have a blue box, blue value and a pencil (`--input-bg`, `--input-border`, `--pencil`), selected chips and cards are blue, slider values are blue. Worked-out figures stay plain: the readouts under the pull have no box, and "your winch" in the sizes is outlined grey, not blue. A one-line key under "Try:" (`.try-hint`) says so. Keep blue boxes for inputs only.
+
 **Status: UNDER CONSTRUCTION.** Both pages carry the amber `.construction` banner and `<meta name="robots" content="noindex">`. Keep both until the owner says otherwise.
 
 ## Source policy (owner's rule, non-negotiable)

@@ -10,6 +10,11 @@
   --accent: #3fb6ff;
   --accent-strong: #1e8fff;
 
+  /* anything the visitor can change: blue box, blue value, pencil (worked-out figures stay plain) */
+  --input-bg: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  --input-border: color-mix(in srgb, var(--accent) 70%, var(--border));
+  --pencil: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%233fb6ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11.2 2.3l2.5 2.5-8.4 8.4-3.2.7.7-3.2z'/%3E%3Cpath d='M9.6 3.9l2.5 2.5'/%3E%3C/svg%3E");
+
   /* traffic light */
   --pass: #4ade80;
   --warn: #fbbf24;
@@ -1692,6 +1697,27 @@ select:focus {
   border-color: var(--accent);
 }
 
+/* the key to inputs vs worked-out figures; after the chips (they're added by app.js) */
+.try-hint {
+  order: 1;
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.try-key {
+  flex: none;
+  width: 26px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg) var(--pencil) no-repeat right 3px center / 10px;
+}
+
 /* ------------------------------------------------------------ scene */
 .scene {
   position: relative;
@@ -1796,7 +1822,7 @@ select:focus {
   padding: 7px 10px 8px;
   border-radius: 12px;
   background: rgba(10, 14, 19, 0.82);
-  border: 1px solid rgba(63, 182, 255, 0.55);
+  border: 1px solid var(--accent);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   min-width: 132px;
@@ -1805,8 +1831,9 @@ select:focus {
 }
 
 .scene-field--winch { min-width: 180px; max-width: 220px; }
-.scene-field--anchor { min-width: 0; max-width: 130px; padding: 4px 9px 5px; }
-.scene-field--anchor .sf-input input { width: 2.6em; font-size: 1.15rem; }
+.scene-field--anchor { min-width: 0; max-width: 170px; padding: 4px 9px 5px; }
+.scene-field--anchor .sf-input { white-space: nowrap; }
+.scene-field--anchor .sf-input input { width: calc(2.2em + 28px); font-size: 1.15rem; }
 
 .scene-field.is-unclear { border-color: var(--warn); }
 
@@ -1829,21 +1856,22 @@ select:focus {
 .sf-input input {
   width: 100%;
   min-width: 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px dashed rgba(230, 235, 239, 0.35);
-  color: var(--text);
+  background: var(--input-bg) var(--pencil) no-repeat right 6px center / 13px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--accent);
   font: inherit;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.3rem;
   line-height: 1.1;
-  padding: 0 0 2px;
+  padding: 2px 24px 2px 6px;
 }
 
 .sf-input input:focus {
   outline: none;
-  border-bottom-color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .sf-hint {
@@ -1938,6 +1966,7 @@ select:focus {
 .angle output {
   font-family: var(--font-display);
   font-weight: 700;
+  color: var(--accent);
   font-size: 1.15rem;
   min-width: 5.6em;
   text-align: right;
@@ -2067,6 +2096,7 @@ select:focus {
 .slope output {
   font-family: var(--font-display);
   font-weight: 700;
+  color: var(--accent);
   font-size: 1.15rem;
   min-width: 5.6em;
   text-align: right;
@@ -2369,10 +2399,10 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px 3px 4px;
-  border-radius: 999px;
+  padding: 3px 9px 3px 3px;
+  border-radius: 9px;
   background: var(--bg);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   font-size: 0.8rem;
   color: var(--text-muted);
   white-space: nowrap;
@@ -2381,19 +2411,32 @@ select:focus {
 
 .rig-field input,
 .mini-field input {
-  width: 4.2em;
+  width: calc(3.4em + 22px);
   min-height: 0;
-  padding: 2px 4px;
+  padding: 2px 22px 2px 6px;
   font: inherit;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.05rem;
-  color: var(--text);
+  color: var(--accent);
   text-align: center;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--input-bg) var(--pencil) no-repeat right 5px center / 12px;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
 }
+
+/* typed figures: no spinner arrows over the pencil (arrow keys still step them) */
+.sf-input input[type="number"],
+.rig-field input[type="number"],
+.mini-field input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.sf-input input::-webkit-inner-spin-button,
+.sf-input input::-webkit-outer-spin-button,
+.rig-field input::-webkit-inner-spin-button,
+.rig-field input::-webkit-outer-spin-button,
+.mini-field input::-webkit-inner-spin-button,
+.mini-field input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.rig-field input { width: calc(2.2em + 24px); }
 
 .rig-field input:focus,
 .mini-field input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
@@ -2650,18 +2693,18 @@ select:focus {
   margin-top: 14px;
 }
 
+/* worked out, not typed: plain figures, no box (a box means you can change it) */
 .readout {
   display: grid;
+  align-content: start;
   gap: 1px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  padding: 2px 12px;
+  border-left: 2px solid var(--border);
 }
 
 .readout-label { font-size: 0.75rem; color: var(--text-muted); }
 .readout--live .readout-value { font-variant-numeric: tabular-nums; }
-#play-part.is-playing .readout--live { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+#play-part.is-playing .readout--live { border-color: var(--text-muted); }
 .readout-value { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.1; }
 .readout-sub { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -2710,7 +2753,7 @@ select:focus {
 .size strong { font-family: var(--font-display); font-size: 1.15rem; }
 .size small { font-size: 0.74rem; color: var(--text-muted); }
 .size--warn-ok { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); }
-.size--mine { background: rgba(63, 182, 255, 0.12); box-shadow: inset 0 0 0 2px var(--accent); }
+.size--mine { background: color-mix(in srgb, var(--text) 8%, var(--surface-2)); box-shadow: inset 0 0 0 2px var(--text-muted); }
 
 .size-marks { display: flex; gap: 4px; margin-top: 4px; }
 
