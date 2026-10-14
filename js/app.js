@@ -748,6 +748,34 @@
     fill("explain-gaps",
       el("p", null, "Where no engineering source, standard or maker publishes a figure, this page says so rather than filling the gap with a rule of thumb."),
       el("ul", null, D.gaps.map((x) => el("li", null, el("strong", null, x.title + ": "), x.text))));
+
+    // Common questions: the questions are in index.html; every figure here comes from data.js.
+    const sizeF = D.rule("winch-size").params.factor;
+    const exGvm = 3000;
+    const exWinch = D.commonWinchesLb.find((x) => x >= C.kgToLb(exGvm * sizeF));
+    fill("faq-size",
+      el("p", null, `WARN's sizing rule: the winch's rated pull should be at least ${U.n(sizeF, 0.1)} times your vehicle's GVM, its maximum loaded mass (it's on the licence disc). A ${U.kg(exGvm)} GVM needs ${U.kgMin(exGvm * sizeF)} (${U.lbMin(exGvm * sizeF)}), so a ${U.n(exWinch)} lb winch.`),
+      el("p", null, "That's a starting point. The calculator above works out what your recovery actually needs: the ground, how deep you're stuck, the slope and the rope layers."),
+      U.sourcesLine(["winch-size"]));
+    const gcf = (id) => D.grounds.find((g) => g.id === id).gcf;
+    const sub = D.rule("bogged-axles").params.subtract;
+    const exMass = 2500;
+    fill("faq-pull",
+      el("p", null, `The vehicle's weight divided by a ground factor: tar ${gcf("road")}, grass ${gcf("grass")}, gravel ${gcf("gravel")}, sand ${gcf("sand")}, mud ${gcf("mud")}, soft clay ${gcf("clay")}. Bogged to the axles, take ${sub} off the factor; bogged to the chassis, plan on the vehicle's full weight. Pulling up a slope adds more, and then ${U.n(MARGIN * 100)}% goes on top as a safety margin.`),
+      el("p", null, `For example, a ${U.kg(exMass)} vehicle on flat sand: ${U.n(exMass)} ÷ ${gcf("sand")} is about ${U.kg(exMass / gcf("sand"))}, and with the ${U.n(MARGIN * 100)}% margin about ${U.kg(exMass / gcf("sand") * (1 + MARGIN))} of pull.`),
+      U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "safety-margin"]));
+    fill("faq-layers",
+      el("p", null, `A winch is rated on the first layer of rope on the drum. Each layer works like a taller gear: less pull, more speed. WARN's figures for a ${U.n(Z.ratedLb)} lb winch: ${Z.layersLb.map((x) => U.n(x)).join(", ")} lb on layers 1 to ${Z.layersLb.length}.`),
+      el("p", null, "Anchoring further away pays out more rope, which keeps the pull on a lower layer."),
+      U.sourcesLine(["layer-pull"]));
+    const loss = D.rule("sheave-friction").params.lossPerSheave;
+    fill("faq-block",
+      el("p", null, `Run the rope out through a snatch block and back, and two lengths of rope share the load, so the winch needs only a little over half the pull: each pulley loses about ${U.n(loss * 100)}% to friction. The vehicle moves at half the line speed, and twice as much rope is paid out.`),
+      el("p", null, "The anchor still takes the full load, so it, the block and the tree protector must be rated for it."),
+      U.sourcesLine(["mechanical-advantage", "sheave-friction"]));
+    fill("faq-engine",
+      el("p", null, `Yes. WARN: with the engine off, a winch will only run for a few minutes. It lists a ${U.n(D.rule("engine-running").params.minCca)} CCA battery as the minimum for winching, and strongly recommends against lithium batteries unless a qualified installer fits extra circuit protection.`),
+      U.sourcesLine(["engine-running"]));
   }
 
   // ------------------------------------------------------------ go

@@ -3006,6 +3006,7 @@ select:focus {
 
 /* ------------------------------------------------------------ explainers, sources page */
 .explainers { margin-top: 16px; }
+.faq-title { font-size: 1.3rem; margin: 24px 0 12px; }
 .explainer-body p, .explainer-body ul { margin: 8px 0 0; }
 .explainer-body ul { padding-left: 18px; }
 .explainer-body li + li { margin-top: 6px; }
