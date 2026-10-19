@@ -99,8 +99,8 @@
 
     const defs = svg("defs", null,
       svg("linearGradient", { id: "sc-sky", x1: 0, y1: 0, x2: 0, y2: 1 },
-        svg("stop", { offset: "0", "stop-color": "#0a0e13" }),
-        svg("stop", { offset: "1", "stop-color": "#18212b" })),
+        svg("stop", { offset: "0", "stop-color": "#060c22" }),
+        svg("stop", { offset: "1", "stop-color": "#101d42" })),
       svg("pattern", { id: "sc-blades", width: 10, height: 10, patternUnits: "userSpaceOnUse" },
         svg("path", { d: "M1 10 L3 2 L4 10 M5 10 L7 4 L8 10", fill: "#6f9a48" })),
       Object.keys(LOOKS).map((k) => groundPattern("sc-g-" + k, k))
