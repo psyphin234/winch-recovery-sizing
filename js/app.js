@@ -331,7 +331,7 @@
       head = status === "close" ? "Close" : "Not enough winch";
       detail = status === "close"
         ? `${name} covers the estimate, but not all of the 25% margin${firstShort && firstShort.x > 0 ? ` once the rope builds up to layer ${firstShort.layer}` : ""}.`
-        : `It needs ${U.kg(need)} in the rope; ${name} gives ${U.kg(firstShort.availKg)} on layer ${firstShort.layer}${firstShort.x > 0 ? `, after ${U.n(firstShort.x, 0.1)} m` : ""}.`;
+        : `It needs ${U.kg(need)} in the rope, but ${name} gives ${U.kg(firstShort.availKg)} on layer ${firstShort.layer}${firstShort.x > 0 ? `, after ${U.n(firstShort.x, 0.1)} m` : ""}.`;
       const better = alts.find((a) => a.parts > S.parts && a.status === "ok");
       if (better) fix = { text: `A ${["", "double", "triple"][better.parts - 1]} line would do it (${U.kg(better.rig.winchKg)} in the rope)`, patch: { parts: better.parts } };
       else if (S.parts < 3) fix = { text: "Even a triple line falls short here: cut the resistance first (I4WDTA: clear the wheels' path, use recovery boards, check tyre pressures, unload)", patch: null };
@@ -365,7 +365,7 @@
       pEnd && pEnd.layer !== p0.layer ? el("li", null, el("span", { class: "swatch swatch--end", "aria-hidden": "true" }), `Winch at the end, layer ${pEnd.layer}: ${U.kg(pEnd.availKg)}`) : null);
 
     const total = el("p", { class: "verdict-sub" },
-      `To move it takes ${U.kg(res.totalKg)}, ${Math.round((res.totalKg / res.massKg) * 100)}% of its ${U.kg(res.massKg)}${S.parts > 1 ? `; ${S.parts} lengths of rope share that, less 8% friction per block` : ""}.`,
+      `To move it takes ${U.kg(res.totalKg)}, ${Math.round((res.totalKg / res.massKg) * 100)}% of its ${U.kg(res.massKg)}${S.parts > 1 ? `, shared by ${S.parts} lengths of rope, less 8% friction per block` : ""}.`,
       ang.angleDeg > 0.5 ? ` With the rope ${U.n(ang.angleDeg, 1)}° off its path, the rope must pull ${U.kg(ang.ropeKg)} to move it, and pulls it ${U.kg(ang.sideKg)} sideways: that load goes into the tyres, the fairlead and the winch mount.` : "",
       res.ground.isProxy ? ` ${res.ground.chosen.label} is worked out as ${res.ground.used.label.toLowerCase()}: your choice, not a source.` : "",
       res.beyondMethod ? " Steeper than 45° is beyond I4WDTA's method." : "",
@@ -487,7 +487,7 @@
       tile("kw", "Power now"),
       tile("time", "Winching time"),
       tile("moved", "Vehicle moved"),
-      el("p", { class: "readout-note" }, "These count up as the pull plays. Current and speed from WARN's published ZEON 10 chart, scaled to your winch's rating, at its 12 V; the drum and rope drawn are the ZEON 10's. Yours will be similar, not identical. The pull needed is held steady all the way, which is cautious: it usually drops once the vehicle is free. Run the engine while winching (WARN), and check your manual's duty cycle.")
+      el("p", { class: "readout-note" }, "These count up as the pull plays. Current and speed from WARN's published ZEON 10 chart, scaled to your winch's rating, at its 12 V. The drum and rope drawn are the ZEON 10's. Yours will be similar, not identical. The pull needed is held steady all the way, which is cautious: it usually drops once the vehicle is free. Run the engine while winching (WARN), and check your manual's duty cycle.")
     );
     if (!play.raf) frame(play.x === null ? R.moveM : Math.min(play.x, R.moveM));
   }
@@ -609,7 +609,7 @@
             el("span", { class: "layer-val layer-val--" + (ok ? "pass" : "fail") }, U.statusIcon(ok ? "pass" : "fail"), U.kg(kg)),
             el("span", { class: "layer-tag" }, used(l.n) ? "used in this pull" : ""));
         }),
-        el("p", { class: "hint" }, `The white line is the ${U.kg(need)} this pull needs in the rope (${lineWord}, 25% margin included). A winch is rated on layer 1, the bare drum; every layer of rope wound on top makes the drum fatter and the pull weaker. This pull uses ${usedText}: the rope starts there and winds on as the vehicle comes out.`));
+        el("p", { class: "hint" }, `The white line is the ${U.kg(need)} this pull needs in the rope (${lineWord}, 25% margin included). A winch is rated on layer 1, the bare drum. Every layer of rope wound on top makes the drum fatter and the pull weaker. This pull uses ${usedText}: the rope starts there and winds on as the vehicle comes out.`));
     }
 
     // common sizes: a box per layer, outlined where this pull happens
@@ -707,7 +707,7 @@
         : [el("td", { class: "num" }, U.tonnes(r.t[mm])), el("td", { class: "num" }, U.tonnes(r.t[mm] / factor)), winchKg ? el("td", { class: "num" }, `${U.n((r.t[mm] * 1000) / winchKg, 0.1)}×`) : null])));
 
     $("ropes").replaceChildren(
-      el("p", { class: "panel-intro muted" }, "Two 12-strand Dyneema-type ropes at winch sizes, as their makers publish them: Southern Ropes' GP-12 (made in Cape Town) and Samson's AmSteel-Blue. Each bar is the rope's breaking strength (spliced); the solid part is its working load limit, the strength ÷ 5, which is Samson's guidance for rope in normal use."),
+      el("p", { class: "panel-intro muted" }, "Two 12-strand Dyneema-type ropes at winch sizes, as their makers publish them: Southern Ropes' GP-12 (made in Cape Town) and Samson's AmSteel-Blue. Each bar is the rope's breaking strength (spliced), and the solid part is its working load limit, the strength ÷ 5, which is Samson's guidance for rope in normal use."),
       el("ul", { class: "rp-legend" },
         T.ropes.map((r) => el("li", null, el("span", { class: "swatch rp-sw--" + r.id, "aria-hidden": "true" }), `${r.name} (${r.maker}), ${r.basis}`)),
         el("li", null, el("span", { class: "swatch rp-sw--wll", "aria-hidden": "true" }), "solid: WLL, strength ÷ 5"),
@@ -715,7 +715,7 @@
         el("li", null, el("span", { class: "rp-key rp-key--need", "aria-hidden": "true" }), `this pull, ${U.kg(needKg)} in the rope`)),
       el("div", { class: "rp-chart" }, rows),
       el("div", { class: "table-wrap" }, el("table", { class: "limit-table rp-table" }, el("thead", null, head), el("tbody", null, body))),
-      el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high; the "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. WARN says to leave 10 wraps of synthetic rope on the drum; the page keeps 5 throughout. GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
+      el("p", { class: "hint" }, `Your winch can put its full rated pull${winchKg ? ` (${U.kg(winchKg)})` : ""} into the rope on the first layer, so that's the most the rope should see in a steady pull. At 5:1 none of these sizes has a WLL that high. The "× your winch" columns show how many times stronger than your winch's pull each rope is. We found no rope or winch maker's published design factor specifically for winch lines. Samson says working loads don't apply after shock loading (a snatched or jerked rope), and to use a higher factor where life, limb or property are at risk. WARN says to leave 10 wraps of synthetic rope on the drum, but the page keeps 5 throughout. GP-12's sheet doesn't say whether its figures are minimum or average strengths.`),
       U.sourcesLine(["synthetic-rope", "rope-wll", "min-wraps"])
     );
   }
@@ -727,8 +727,8 @@
     $("tree-text").replaceChildren(
       p("What it is.", "A short, wide strap (WARN: typically tough, high-quality nylon) that goes round the anchor tree. Its two ends are joined with a shackle, and the winch hook, or a snatch block, goes on the shackle. WARN describes it as giving the winch rope an attachment point on a wide variety of anchors, and as protecting living trees."),
       p("Why: the tree.", "A bare winch rope pulled tight round a trunk bears on a narrow strip of bark. Bark lost all or nearly all the way round a trunk is what the RHS (Royal Horticultural Society) calls ring-barking, or girdling: it cuts the flow of sap between the roots and the top of the tree, and untreated it can make the tree die back or die. It may not show at first. Where some of the living layers under the bark (the cambium and phloem) are left, the tree may recover."),
-      p("Why: your rope.", "WARN: never wrap the winch rope back onto itself; use a tree trunk protector or a choker chain on the anchor."),
-      el("p", null, el("strong", null, "How to rig it (WARN). "), `Put it round the tree as low as possible. Join its two ends with a shackle through the hook loop; tighten the pin, then back it off ${turns === 0.5 ? "half a turn" : U.n(turns, 0.01) + " turn"}. Make sure the strap won't slip. Pick a tree that lets you pull straight in the direction the vehicle has to move.`),
+      p("Why: your rope.", "WARN: never wrap the winch rope back onto itself. Use a tree trunk protector or a choker chain on the anchor."),
+      el("p", null, el("strong", null, "How to rig it (WARN). "), `Put it round the tree as low as possible. Join its two ends with a shackle through the hook loop and tighten the pin, then back it off ${turns === 0.5 ? "half a turn" : U.n(turns, 0.01) + " turn"}. Make sure the strap won't slip. Pick a tree that lets you pull straight in the direction the vehicle has to move.`),
       el("p", { id: "tree-load" }),
       U.sourcesLine(["tree-protector", "ring-barking"])
     );
@@ -761,7 +761,7 @@
     const sub = D.rule("bogged-axles").params.subtract;
     const exMass = 2500;
     fill("faq-pull",
-      el("p", null, `The vehicle's weight divided by a ground factor: tar ${gcf("road")}, grass ${gcf("grass")}, gravel ${gcf("gravel")}, sand ${gcf("sand")}, mud ${gcf("mud")}, soft clay ${gcf("clay")}. Bogged to the axles, take ${sub} off the factor; bogged to the chassis, plan on the vehicle's full weight. Pulling up a slope adds more, and then ${U.n(MARGIN * 100)}% goes on top as a safety margin.`),
+      el("p", null, `The vehicle's weight divided by a ground factor: tar ${gcf("road")}, grass ${gcf("grass")}, gravel ${gcf("gravel")}, sand ${gcf("sand")}, mud ${gcf("mud")}, soft clay ${gcf("clay")}. Bogged to the axles, take ${sub} off the factor. Bogged to the chassis, plan on the vehicle's full weight. Pulling up a slope adds more, and then ${U.n(MARGIN * 100)}% goes on top as a safety margin.`),
       el("p", null, `For example, a ${U.kg(exMass)} vehicle on flat sand: ${U.n(exMass)} ÷ ${gcf("sand")} is about ${U.kg(exMass / gcf("sand"))}, and with the ${U.n(MARGIN * 100)}% margin about ${U.kg(exMass / gcf("sand") * (1 + MARGIN))} of pull.`),
       U.sourcesLine(["ground-factor", "bogged-axles", "bogged-chassis", "gradient", "safety-margin"]));
     fill("faq-layers",
