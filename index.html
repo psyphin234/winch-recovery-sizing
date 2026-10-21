@@ -92,7 +92,7 @@
         <div class="scene-fields">
           <label class="scene-field" id="f-mass">
             <span class="sf-label">Vehicle mass</span>
-            <span class="sf-input"><input id="massKg" type="number" inputmode="numeric" min="0" step="50" autocomplete="off"><span>kg</span></span>
+            <span class="sf-input"><input id="massKg" type="text" inputmode="numeric" min="0" step="50" autocomplete="off"><span>kg</span></span>
             <span class="sf-hint">GVM, or weighbridge</span>
           </label>
           <label class="scene-field scene-field--winch" id="f-winch">
@@ -102,7 +102,7 @@
           </label>
           <label class="scene-field scene-field--anchor" id="f-anchor-scene">
             <span class="sf-label">Anchor</span>
-            <span class="sf-input"><input id="anchorScene" type="number" inputmode="decimal" min="1" step="1" autocomplete="off"><span>m away</span></span>
+            <span class="sf-input"><input id="anchorScene" type="text" inputmode="decimal" min="1" step="1" autocomplete="off"><span>m away</span></span>
           </label>
         </div>
         </div>
@@ -149,7 +149,7 @@
           </div>
         </div>
         <div class="rig" id="rig">
-          <label class="rig-field" id="f-anchor"><span class="visually-hidden">Distance from the winch to the anchor</span><input id="anchorM" type="number" inputmode="decimal" min="1" step="1"><span>m to anchor</span></label>
+          <label class="rig-field" id="f-anchor"><span class="visually-hidden">Distance from the winch to the anchor</span><input id="anchorM" type="text" inputmode="decimal" min="1" step="1"><span>m to anchor</span></label>
         </div>
         <ul class="gear" id="gear"></ul>
         <p class="hint gear-note" id="gear-note"></p>
@@ -172,7 +172,7 @@
               <figcaption>
                 <span id="drum-layer" class="drum-layer"></span>
                 <span class="drum-rope">
-                  <label class="mini-field"><input id="ropeLengthM" type="number" inputmode="decimal" min="5" step="1" aria-label="Rope length"><span>m of rope</span></label>
+                  <label class="mini-field"><input id="ropeLengthM" type="text" inputmode="decimal" min="5" step="1" aria-label="Rope length"><span>m of rope</span></label>
                 </span>
               </figcaption>
             </figure>
@@ -187,7 +187,7 @@
             <div id="chart-pull"></div>
             <div class="play-bar">
               <button type="button" class="play-button" id="play">&#9654; Play the pull</button>
-              <label class="mini-field">The vehicle must move <input id="moveM" type="number" inputmode="decimal" min="1" step="1" aria-label="Distance the vehicle must move"><span>m to be free</span></label>
+              <label class="mini-field">The vehicle must move <input id="moveM" type="text" inputmode="decimal" min="1" step="1" aria-label="Distance the vehicle must move"><span>m to be free</span></label>
             </div>
           </div>
         </div>

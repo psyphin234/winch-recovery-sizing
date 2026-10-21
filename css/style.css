@@ -507,7 +507,7 @@ h3 {
   color: var(--text-muted);
 }
 
-input[type="number"],
+input[inputmode],
 select {
   width: 100%;
   font: inherit;
@@ -520,7 +520,7 @@ select {
   min-height: 44px;
 }
 
-input[type="number"]:focus,
+input[inputmode]:focus,
 select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
@@ -2544,9 +2544,9 @@ select:focus {
 }
 
 /* typed figures: no spinner arrows over the pencil (arrow keys still step them) */
-.sf-input input[type="number"],
-.rig-field input[type="number"],
-.mini-field input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.sf-input input[inputmode],
+.rig-field input[inputmode],
+.mini-field input[inputmode] { -moz-appearance: textfield; appearance: textfield; }
 .sf-input input::-webkit-inner-spin-button,
 .sf-input input::-webkit-outer-spin-button,
 .rig-field input::-webkit-inner-spin-button,
@@ -3506,13 +3506,13 @@ select:focus {
   }
 
   /* -------- entries glow when they have focus */
-  input[type="number"],
+  input[inputmode],
   input[type="text"],
   select {
     transition: border-color 0.2s, box-shadow 0.25s;
   }
 
-  input[type="number"]:focus,
+  input[inputmode]:focus,
   input[type="text"]:focus,
   select:focus {
     box-shadow: 0 0 0 3px rgba(76, 201, 255, 0.18), 0 0 22px -4px var(--accent);

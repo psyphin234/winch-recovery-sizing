@@ -262,6 +262,18 @@
     eq(s.failsAtM, null, "1.5 t is within a 10 000 lb winch all the way");
   });
 
+  // ------------------------------------------------------------ typed numbers
+  test("parseNumber reads a decimal comma or point, and thousands", () => {
+    const cases = [
+      ["2.4", 2.4], ["2,4", 2.4], ["2,", 2], ["2.", 2], [",5", 0.5], ["  7,25 ", 7.25],
+      ["2 500", 2500], ["2" + String.fromCharCode(160) + "500", 2500], ["2,500", 2500], ["1,250,000", 1250000],
+      ["1 234,56", 1234.56], ["1.234,56", 1234.56], ["1,234.56", 1234.56],
+      ["-3", -3], [String.fromCharCode(8722) + "3", -3], ["0,125", 0.125], ["12,3456", 12.3456]
+    ];
+    cases.forEach(([text, want]) => eq(C.parseNumber(text), want, JSON.stringify(text)));
+    ["", "-", "abc", "6.2.x", "1,2,3x"].forEach((text) => eq(isNaN(C.parseNumber(text)), true, JSON.stringify(text) + " is not a number"));
+  });
+
   // ------------------------------------------------------------ report
   const failed = results.filter((r) => !r.ok);
   const list = document.getElementById("results");

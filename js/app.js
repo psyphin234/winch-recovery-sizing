@@ -152,8 +152,23 @@
     $("ropeAngleDeg").addEventListener("input", (e) => set({ ropeAngleDeg: +e.target.value }));
 
     // typed fields
+    // The number boxes are type="text" (see C.parseNumber), so the up and down arrows step them here.
+    document.querySelectorAll("input[inputmode]").forEach((input) =>
+      input.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+        e.preventDefault();
+        const step = Number(input.getAttribute("step")) || 1;
+        const v = C.parseNumber(input.value);
+        let next = (isFinite(v) ? v : 0) + (e.key === "ArrowUp" ? step : -step);
+        if (input.hasAttribute("min")) next = Math.max(Number(input.getAttribute("min")), next);
+        if (input.hasAttribute("max")) next = Math.min(Number(input.getAttribute("max")), next);
+        input.value = String(Math.round(next * 100) / 100);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      })
+    );
+
     const bindNum = (id, key) => $(id).addEventListener("input", (e) => {
-      const v = parseFloat(e.target.value);
+      const v = C.parseNumber(e.target.value);
       if (isFinite(v) && v > 0) set({ [key]: v });
     });
     bindNum("massKg", "massKg");
@@ -237,7 +252,7 @@
     const deg = numOr(S.gradeDeg, 0);
     $("grade-out").textContent = deg ? `${deg}° · ${U.n(Math.tan((deg * Math.PI) / 180) * 100, 1)}%` : "Flat";
     ["anchorM", "anchorScene"].forEach((id) => {
-      if (document.activeElement !== $(id) && +$(id).value !== S.anchorM) $(id).value = S.anchorM || "";
+      if (document.activeElement !== $(id) && C.parseNumber($(id).value) !== S.anchorM) $(id).value = S.anchorM || "";
     });
     const ra = numOr(S.ropeAngleDeg, 0);
     angleView.set(ra);

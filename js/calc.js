@@ -319,7 +319,26 @@
     return pick ? Object.assign({ mbsT: pick.wllT * s.designFactor }, pick) : null;
   }
 
+  // A typed number, read the way people write it: "2.4" or "2,4" (the comma is
+  // South Africa's decimal mark and what an iPhone's keypad shows there),
+  // "2 500" or "2,500" for thousands. NaN if it isn't a number. The boxes are
+  // type="text" because iPhone Safari's number boxes mangle a decimal comma.
+  function parseNumber(text) {
+    let s = String(text == null ? "" : text).replace(/[\s']/g, "").replace(String.fromCharCode(8722), "-"); // \s takes non-breaking spaces too
+    const comma = s.lastIndexOf(","), dot = s.lastIndexOf(".");
+    if (comma >= 0 && dot >= 0) {
+      // both: the later one is the decimal mark
+      s = comma > dot ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+    } else if (comma >= 0) {
+      s = s.split(",").length > 2 || /^-?[1-9]\d{0,2},\d{3}$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".");
+    } else if (s.split(".").length > 2) {
+      s = s.replace(/\./g, "");
+    }
+    return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? parseFloat(s) : NaN;
+  }
+
   root.WINCH_CALC = {
+    parseNumber,
     kgToLb,
     lbToKg,
     kgToKn,
