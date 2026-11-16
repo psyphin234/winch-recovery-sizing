@@ -1855,27 +1855,64 @@ select:focus {
   display: block;
 }
 
-.sc-hill { fill: #0c1636; }
-.sc-hill--near { fill: #091230; }
-.sc-trunk { fill: #5b4636; }
-.sc-leaf { fill: #2d5332; }
-.sc-leaf--2 { fill: #376540; }
+.sc-star { fill: #dbe8ff; }
+.sc-star--twinkle { animation: sc-twinkle 4.5s ease-in-out infinite; }
+@keyframes sc-twinkle { 50% { opacity: 0.15; } }
+.sc-moon { fill: #e6efff; }
+.sc-moon-cut { fill: #050b1e; }
+.sc-ridge { fill: none; stroke: #3d5fa8; stroke-width: 1; stroke-opacity: 0.55; }
+.sc-trunk { stroke: #2c2018; stroke-width: 1.5; stroke-linejoin: round; }
+.sc-barkline { fill: none; stroke: #2c2018; stroke-width: 1.4; stroke-opacity: 0.6; stroke-linecap: round; }
+.sc-branch { fill: none; stroke: #4a382b; stroke-width: 6; stroke-linecap: round; }
+.sc-leaf { stroke: #1a3320; stroke-width: 1.5; }
+.sc-leaf--2 { filter: brightness(1.18); }
+.sc-leafshine { fill: none; stroke: #8fd39a; stroke-width: 2; stroke-opacity: 0.3; stroke-linecap: round; }
 .sc-strap { fill: #d1a54a; }
-.sc-body { fill: #1b2b52; stroke: #8fb3e0; stroke-width: 2; stroke-linejoin: round; }
-.sc-glass { fill: #0d1a3a; stroke: #6f8fc0; stroke-width: 1.5; }
+.sc-strap-under { fill: #050a1c; fill-opacity: 0.6; }
+.sc-stitch { stroke: #7a520c; stroke-width: 1.2; stroke-dasharray: 3 2; }
+.sc-body { stroke: #8fb3e0; stroke-width: 2; stroke-linejoin: round; }
+.sc-shine { fill: none; stroke: #cfe2ff; stroke-width: 1.6; stroke-opacity: 0.5; stroke-linecap: round; stroke-linejoin: round; }
+.sc-glass { stroke: #6f8fc0; stroke-width: 1.5; }
+.sc-glint { fill: none; stroke: #bcd6ff; stroke-width: 2; stroke-opacity: 0.22; stroke-linecap: round; }
+.sc-seam { fill: none; stroke: #0b1430; stroke-width: 1.5; stroke-opacity: 0.8; }
+.sc-handle { fill: #8fb3e0; fill-opacity: 0.7; }
+.sc-sill { fill: #0b1228; }
 .sc-rack { fill: #6f8fc0; }
+.sc-rack-leg { stroke: #6f8fc0; stroke-width: 3; }
+.sc-head { fill: #ffe9a8; filter: drop-shadow(0 0 5px #ffe9a8); }
+.sc-tail { fill: #ff5d73; filter: drop-shadow(0 0 4px #ff5d73); }
+.sc-beam { pointer-events: none; }
 .sc-bar { fill: #2b3c66; stroke: #8fb3e0; stroke-width: 1.5; }
-.sc-winch { fill: #c9d8f0; }
+.sc-winch { stroke: #050a1c; stroke-width: 1; }
+.sc-winch-line { stroke: #56658f; stroke-width: 1.2; }
+.sc-arch { fill: #070b1c; }
 .sc-tyre { fill: #0a0f22; stroke: #2a3352; stroke-width: 3; }
-.sc-rim { fill: #3e4c72; }
-.sc-spoke { stroke: #182040; stroke-width: 3; }
-.sc-hub { fill: #c9d8f0; }
+.sc-tread { fill: none; stroke: #39456e; stroke-width: 5; stroke-dasharray: 4 3.72; }
+.sc-rim { stroke: #9fb2d8; stroke-width: 1; }
+.sc-spoke { stroke: #141c38; stroke-width: 3.2; stroke-linecap: round; }
+.sc-hub { fill: #dbe6fa; }
+.sc-shadow { fill: #000; fill-opacity: 0.3; }
+.sc-depth { pointer-events: none; }
+.sc-mounds ellipse { stroke-width: 1; }
 .sc-edge { stroke-width: 2.5; transition: stroke 0.4s; }
 .sc-mounds, .sc-blades { transition: opacity 0.5s; }
 .sc-rope { stroke: var(--text); stroke-width: 2.4; stroke-linecap: round; }
 .sc-rope--back { stroke: #b5c6e4; }
+.sc-rope-under { stroke: #050a1c; stroke-opacity: 0.6; stroke-width: 5; stroke-linecap: round; }
+.sc-ropes { transition: filter 0.3s; }
+.sc--ok .sc-ropes, .sc--close .sc-ropes { filter: drop-shadow(0 0 3px rgba(76, 201, 255, 0.85)); }
+.sc--short .sc-ropes { filter: drop-shadow(0 0 4px var(--fail)); }
 .sc-block { fill: #060c22; stroke: var(--text); stroke-width: 2.5; }
+.sc-block-pin { fill: var(--text); }
 .sc-blockstrap { stroke: #d1a54a; stroke-width: 4; }
+.sc-hit { stroke: transparent; stroke-width: 22; stroke-linecap: round; pointer-events: stroke; }
+.scene-svg { user-select: none; -webkit-user-select: none; }
+@media (hover: hover) and (pointer: fine) {
+  .scene-svg { cursor: ns-resize; }
+}
+.scene-pic.is-tilting .sc-world,
+.scene-pic.is-tilting .sc-veh,
+.scene-pic.is-tilting .scene-field { transition: none; }
 .sc-dimline { stroke: var(--text-muted); stroke-width: 1.5; }
 .sc-dimhead { fill: var(--text-muted); }
 .sc-dimtext { fill: var(--text); font-family: var(--font-body); font-size: 15px; font-weight: 600; }
@@ -2092,12 +2129,19 @@ select:focus {
 }
 
 .angle-svg { display: block; width: 104px; height: auto; }
-.av-veh { fill: #1b2b52; stroke: #8fb3e0; stroke-width: 1.5; }
-.av-glass { fill: #0d1a3a; }
+.angle-svg { overflow: visible; }
+.angle-svg.is-drag { cursor: grab; touch-action: none; }
+.angle-svg.is-dragging { cursor: grabbing; }
+.av-veh { stroke: #8fb3e0; stroke-width: 1.5; }
+.av-glass { fill: #0d1a3a; stroke: #6f8fc0; stroke-width: 0.8; }
 .av-path { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 3 3; }
-.av-line { stroke: var(--text); stroke-width: 2.4; }
+.av-line { stroke: var(--text); stroke-width: 2.4; stroke-linecap: round; }
+.av-line-under { stroke: #050a1c; stroke-width: 5; stroke-linecap: round; }
 .av-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 2.5; }
+.av-ring { fill: none; stroke: #1a3320; stroke-width: 1; }
+.av-grip { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
 .av-arc { fill: none; stroke: var(--series-4); stroke-width: 2; }
+.is-dragging .av-rope { transition: none; }
 .av-rope {
   transform-box: view-box;
   transform-origin: 46px 34px;
@@ -2488,7 +2532,9 @@ select:focus {
 
 .rigging-svg { display: block; max-width: 100%; height: auto; }
 
-.rg-vehicle { fill: #1b2b52; stroke: #8fb3e0; stroke-width: 2; }
+.rg-vehicle { stroke: #8fb3e0; stroke-width: 2; }
+.rg-rope-under { stroke: #050a1c; stroke-opacity: 0.55; stroke-width: 6; stroke-linecap: round; }
+.rg-treering { fill: none; stroke: #1a3320; stroke-width: 1.2; }
 .rg-winch { fill: #c9d8f0; }
 .rg-tree { fill: #2d5332; stroke: #5b4636; stroke-width: 4; }
 .rg-rope { stroke: var(--series-1); stroke-width: 2.6; fill: none; }
@@ -2635,15 +2681,16 @@ select:focus {
 
 .drum-svg { display: block; width: 100%; max-width: 640px; margin: 0 auto; height: auto; }
 .wn-base { fill: #2b3c66; }
-.wn-motor { fill: #1c2747; stroke: #6d80aa; stroke-width: 1.5; }
+.wn-motor { stroke: #6d80aa; stroke-width: 1.5; }
 .wn-rib { stroke: #3e4c72; stroke-width: 2; }
-.wn-gear { fill: #1c2747; stroke: #6d80aa; stroke-width: 1.5; }
+.wn-gear { stroke: #6d80aa; stroke-width: 1.5; }
 .wn-knob { fill: #d1a54a; }
-.wn-flange { fill: #8b9cc2; }
-.wn-barrel { fill: #3e4c72; }
+.wn-flange { stroke: #050a1c; stroke-width: 0.8; }
+.wn-barrel { stroke: #050a1c; stroke-width: 0.6; }
 .wn-axis { stroke: #1c2747; stroke-width: 1; stroke-dasharray: 4 3; }
 .wn-tie { fill: #6d80aa; }
 .wn-exit { fill: none; stroke: var(--text); stroke-width: 2.2; stroke-linecap: round; }
+.wn-exit-under { fill: none; stroke: #050a1c; stroke-opacity: 0.6; stroke-width: 5; stroke-linecap: round; }
 .wn-text { fill: var(--text-muted); font-family: var(--font-body); font-size: 10.5px; }
 .wn-text--exit { fill: var(--text); font-weight: 600; }
 
@@ -2668,6 +2715,9 @@ select:focus {
 .dm-wrap.is-min { fill: var(--series-neutral); stroke: none; }
 .dm-wrap.is-start { fill: var(--series-1); stroke: none; }
 .dm-wrap.is-wound { fill: color-mix(in srgb, var(--series-1) 55%, var(--text)); stroke: none; }
+.dm-bead { pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+.dm-wrap.is-min + .dm-bead, .dm-wrap.is-start + .dm-bead, .dm-wrap.is-wound + .dm-bead { opacity: 1; }
+.drum-svg .dm-wrap { cursor: help; }
 
 .drum-box figcaption {
   display: grid;
@@ -2700,12 +2750,16 @@ select:focus {
 }
 
 .gauge-svg { display: block; width: 100%; max-width: 260px; margin: 0 auto; height: auto; }
-.ga-track { fill: none; stroke: color-mix(in srgb, var(--series-3) 20%, var(--surface)); stroke-width: 14; stroke-linecap: round; }
-.ga-fill { fill: none; stroke: var(--series-3); stroke-width: 14; stroke-linecap: round; }
+.ga-track { fill: none; stroke: color-mix(in srgb, var(--series-3) 15%, var(--surface)); stroke-width: 14; stroke-linecap: round; }
+.ga-fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+.ga-fill--glow { stroke-width: 16; opacity: 0.3; }
 .ga-ticks line { stroke: var(--text-muted); stroke-width: 1.5; }
-.ga-ticks text { fill: var(--text-muted); font-family: var(--font-body); font-size: 10px; }
-.ga-needle { fill: var(--text); transform-box: view-box; transform-origin: 110px 112px; transform: rotate(-90deg); transition: transform 0.12s linear; }
-.ga-peak { stroke: var(--text); stroke-width: 2; transform-box: view-box; transform-origin: 110px 112px; }
+.ga-ticks line.ga-minor { stroke-width: 1; stroke-opacity: 0.6; }
+.ga-ticks text { fill: var(--text-muted); font-family: var(--font-body); font-size: 10px; font-variant-numeric: tabular-nums; }
+.ga-needle { fill: var(--text); transform-box: view-box; transform-origin: 110px 112px; transform: rotate(-90deg); transition: transform 0.12s linear; filter: drop-shadow(0 0 4px rgba(160, 140, 255, 0.8)); }
+.ga-hub circle { fill: var(--surface-2); stroke: var(--text); stroke-width: 2; }
+.ga-hub .ga-hub-dot { fill: var(--series-3); stroke: none; }
+.ga-peak { fill: var(--text); transform-box: view-box; transform-origin: 110px 112px; }
 
 .gauge-box figcaption {
   display: grid;
@@ -2742,11 +2796,17 @@ select:focus {
 .key--amps { border-color: var(--series-3); }
 
 .chart-svg { display: block; max-width: 100%; height: auto; }
-.ch-grid { stroke: var(--border); stroke-width: 1; }
-.ch-tick, .ch-axis, .ch-unit { fill: var(--text-muted); font-family: var(--font-body); font-size: 11.5px; }
+.ch-plot { fill: rgba(120, 170, 255, 0.035); }
+.ch-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 4; }
+.ch-grid--base { stroke-dasharray: none; stroke: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+.ch-tick, .ch-axis, .ch-unit { fill: var(--text-muted); font-family: var(--font-body); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .ch-unit { font-weight: 600; }
 .ch-label { fill: var(--text); font-family: var(--font-body); font-size: 12px; }
-.ch-line { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.ch-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ch-area { stroke: none; }
+.ch-cross { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.ch-hit { touch-action: pan-y; cursor: crosshair; }
+.ch-hit.is-scrub { cursor: ew-resize; }
 .ch-line--avail { stroke: var(--series-1); }
 .ch-line--need { stroke: var(--series-2); stroke-dasharray: 7 5; }
 .ch-line--amps { stroke: var(--series-3); }
@@ -2769,11 +2829,14 @@ select:focus {
 .pw-fill--rope { background: var(--series-1); }
 .pw-val { font-family: var(--font-display); font-size: 1rem; text-align: right; white-space: nowrap; min-width: 4.2em; font-variant-numeric: tabular-nums; }
 .pw-note { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
-.ch-playhead { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.ch-playhead { stroke: var(--text); stroke-opacity: 0.7; stroke-width: 1.2; }
 .ch-dot { stroke: var(--surface); stroke-width: 2; }
 .ch-dot.ch-line--avail { fill: var(--series-1); }
 .ch-dot.ch-line--need { fill: var(--series-2); }
 .ch-dot.ch-line--amps { fill: var(--series-3); }
+.ch-line.ch-line--glow { stroke-width: 9; stroke-opacity: 0.16; stroke-dasharray: none; }
+.ch-ring { fill: none; stroke-width: 2; stroke-dasharray: none; }
+.ch-area-stop.ch-line--avail { stop-color: var(--series-1); }
 
 #chart-amps { margin-top: 6px; }
 

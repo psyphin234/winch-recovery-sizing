@@ -83,59 +83,119 @@
     return p;
   }
 
+  const grad = (id, attrs, stops) => svg("linearGradient", Object.assign({ id }, attrs),
+    stops.map((st) => svg("stop", { offset: st[0], "stop-color": st[1], "stop-opacity": st[2] === undefined ? null : st[2] })));
+  const radial = (id, attrs, stops) => svg("radialGradient", Object.assign({ id }, attrs),
+    stops.map((st) => svg("stop", { offset: st[0], "stop-color": st[1], "stop-opacity": st[2] === undefined ? null : st[2] })));
+  // the same "random" numbers every time, so a picture never changes between draws
+  const seeded = (seed) => () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
   // ------------------------------------------------------------ the scene (side view)
   /*
    * World coordinates: viewBox 800 x 380, ground line y = 290, the world turns
    * about (420, 290) for the slope and shrinks a little on steep slopes so the
    * tree stays in view. The vehicle faces right; the anchor tree is on the right.
    * Inputs and labels are HTML overlays placed with the returned positions.
+   * The night sky, lights and shading are illustration, not data.
    */
+  const SCENE = { VW: 800, VH: 380, PX: 420, PY: 290 };
   function scene() {
-    const VW = 800;
-    const VH = 380;
-    const PX = 420;
-    const PY = 290;
+    const { VW, VH, PX, PY } = SCENE;
     const SINK = { none: 4, axles: 32, chassis: 47 };
 
     const defs = svg("defs", null,
-      svg("linearGradient", { id: "sc-sky", x1: 0, y1: 0, x2: 0, y2: 1 },
-        svg("stop", { offset: "0", "stop-color": "#060c22" }),
-        svg("stop", { offset: "1", "stop-color": "#101d42" })),
+      grad("sc-sky", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#040919"], [0.62, "#0b1740"], [1, "#16306a"]]),
+      radial("sc-horizon", { cx: 0.5, cy: 1, r: 0.75 }, [[0, "#4cc9ff", 0.2], [1, "#4cc9ff", 0]]),
+      radial("sc-moonglow", { cx: 0.5, cy: 0.5, r: 0.5 }, [[0, "#eaf2ff", 0.3], [1, "#eaf2ff", 0]]),
+      grad("sc-hill-far", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#142452"], [1, "#0a1330"]]),
+      grad("sc-hill-near", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#0e1a40"], [1, "#070e26"]]),
+      grad("sc-depth", { gradientUnits: "userSpaceOnUse", x1: 0, y1: PY, x2: 0, y2: PY + 200 }, [[0, "#000", 0], [1, "#000", 0.5]]),
+      grad("sc-paint", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#3a5591"], [0.55, "#22335c"], [1, "#131e3e"]]),
+      grad("sc-glass", { x1: 0, y1: 0, x2: 1, y2: 1 }, [[0, "#1c3566"], [1, "#081228"]]),
+      radial("sc-rim", { cx: 0.4, cy: 0.35, r: 0.7 }, [[0, "#7f93bd"], [1, "#2c3960"]]),
+      grad("sc-beam", { x1: 0, y1: 0, x2: 1, y2: 0 }, [[0, "#ffe9a8", 0.3], [1, "#ffe9a8", 0]]),
+      grad("sc-bark", { x1: 0, y1: 0, x2: 1, y2: 0 }, [[0, "#6f5642"], [0.5, "#5b4636"], [1, "#3b2c21"]]),
+      radial("sc-leafg", { cx: 0.35, cy: 0.3, r: 0.8 }, [[0, "#4c8a55"], [1, "#22422a"]]),
+      grad("sc-metal", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#f4f8ff"], [1, "#8b9cc2"]]),
       svg("pattern", { id: "sc-blades", width: 10, height: 10, patternUnits: "userSpaceOnUse" },
         svg("path", { d: "M1 10 L3 2 L4 10 M5 10 L7 4 L8 10", fill: "#6f9a48" })),
       Object.keys(LOOKS).map((k) => groundPattern("sc-g-" + k, k))
     );
 
-    // far hills, so the slope reads against something fixed
+    // sky and far hills, so the slope reads against something fixed
+    const rnd = seeded(11);
+    const stars = svg("g", { class: "sc-stars" });
+    for (let i = 0; i < 54; i++) {
+      stars.appendChild(svg("circle", { cx: (rnd() * VW).toFixed(1), cy: (rnd() * 200).toFixed(1), r: (0.5 + rnd() * 0.9).toFixed(2), class: "sc-star" + (i % 4 === 0 ? " sc-star--twinkle" : ""), style: `opacity:${(0.25 + rnd() * 0.65).toFixed(2)};animation-delay:${(-rnd() * 5).toFixed(1)}s` }));
+    }
     const backdrop = svg("g", { class: "sc-back" },
       svg("rect", { width: VW, height: VH, fill: "url(#sc-sky)" }),
-      svg("path", { d: "M0 250 Q120 200 230 232 T470 214 T800 226 L800 380 L0 380 Z", class: "sc-hill" }),
-      svg("path", { d: "M0 300 Q160 262 330 286 T800 276 L800 380 L0 380 Z", class: "sc-hill sc-hill--near" })
+      stars,
+      svg("circle", { cx: 96, cy: 54, r: 44, fill: "url(#sc-moonglow)" }),
+      svg("circle", { cx: 96, cy: 54, r: 13, class: "sc-moon" }),
+      svg("circle", { cx: 102, cy: 49, r: 12, class: "sc-moon-cut" }),
+      svg("rect", { y: 90, width: VW, height: 200, fill: "url(#sc-horizon)" }),
+      svg("path", { d: "M0 250 Q120 200 230 232 T470 214 T800 226 L800 380 L0 380 Z", fill: "url(#sc-hill-far)" }),
+      svg("path", { d: "M0 250 Q120 200 230 232 T470 214 T800 226", class: "sc-ridge" }),
+      svg("path", { d: "M0 300 Q160 262 330 286 T800 276 L800 380 L0 380 Z", fill: "url(#sc-hill-near)" })
     );
 
+    let tips = {};
+    const hit = (key, node) => {
+      const show = (e) => { if (tips[key]) showTip(tips[key], e.clientX, e.clientY); };
+      node.addEventListener("pointerenter", show);
+      node.addEventListener("pointermove", show);
+      node.addEventListener("pointerleave", hideTip);
+      return node;
+    };
+
+    const leaf = (cx, cy, r, cls) => svg("circle", { cx, cy, r, class: "sc-leaf" + (cls ? " " + cls : ""), fill: "url(#sc-leafg)" });
     const tree = svg("g", { class: "sc-tree" },
-      svg("rect", { x: 694, y: 122, width: 26, height: 176, rx: 6, class: "sc-trunk" }),
-      svg("circle", { cx: 680, cy: 108, r: 44, class: "sc-leaf" }),
-      svg("circle", { cx: 728, cy: 96, r: 40, class: "sc-leaf sc-leaf--2" }),
-      svg("circle", { cx: 706, cy: 64, r: 38, class: "sc-leaf" }),
-      svg("rect", { x: 690, y: 232, width: 34, height: 14, rx: 3, class: "sc-strap" })
+      svg("path", { class: "sc-trunk", fill: "url(#sc-bark)", d: "M694 300 L696 130 Q707 120 718 130 L722 300 Z" }),
+      svg("path", { class: "sc-barkline", d: "M702 150 L701 210 M711 160 L712 228 M705 252 L704 292 M714 256 L715 290" }),
+      svg("path", { class: "sc-branch", d: "M706 150 L688 118 M708 142 L730 110" }),
+      leaf(672, 112, 40), leaf(736, 104, 38, "sc-leaf--2"), leaf(704, 66, 40), leaf(690, 96, 30, "sc-leaf--2"), leaf(722, 82, 28),
+      svg("path", { class: "sc-leafshine", d: "M680 44 Q704 26 728 44 M650 96 Q656 78 672 74" }),
+      hit("protector", svg("g", { class: "sc-protector" },
+        svg("rect", { x: 689, y: 231, width: 36, height: 16, rx: 3, class: "sc-strap-under" }),
+        svg("rect", { x: 690, y: 232, width: 34, height: 14, rx: 3, class: "sc-strap" }),
+        svg("line", { x1: 693, y1: 239, x2: 721, y2: 239, class: "sc-stitch" })))
     );
 
     const ropes = svg("g", { class: "sc-ropes" });
+    const ropeHit = hit("rope", svg("line", { x1: 462, y1: 241, x2: 690, y2: 241, class: "sc-hit" }));
 
     // vehicle: outer group sinks, inner group creeps forward while winching
     const wheel = (cx) => svg("g", { class: "sc-wheel" },
       svg("circle", { cx, cy: 258, r: 32, class: "sc-tyre" }),
-      svg("circle", { cx, cy: 258, r: 18, class: "sc-rim" }),
-      [0, 72, 144, 216, 288].map((a) => svg("line", { x1: cx, y1: 258, x2: cx + 15 * Math.cos((a * Math.PI) / 180), y2: 258 + 15 * Math.sin((a * Math.PI) / 180), class: "sc-spoke" })),
-      svg("circle", { cx, cy: 258, r: 4, class: "sc-hub" }));
+      svg("circle", { cx, cy: 258, r: 29.5, class: "sc-tread" }),
+      svg("circle", { cx, cy: 258, r: 19, class: "sc-rim", fill: "url(#sc-rim)" }),
+      [0, 60, 120, 180, 240, 300].map((a) => svg("line", { x1: cx + 6 * Math.cos((a * Math.PI) / 180), y1: 258 + 6 * Math.sin((a * Math.PI) / 180), x2: cx + 17 * Math.cos((a * Math.PI) / 180), y2: 258 + 17 * Math.sin((a * Math.PI) / 180), class: "sc-spoke" })),
+      svg("circle", { cx, cy: 258, r: 5, class: "sc-hub" }));
+    const arch = (cx) => svg("path", { class: "sc-arch", d: `M ${cx - 39} 256 A 39 39 0 0 1 ${cx + 39} 256 Z` });
     const vehicleInner = svg("g", { class: "sc-veh-inner" },
-      svg("path", { class: "sc-body", d: "M186 252 L186 206 Q186 196 196 195 L292 192 L320 151 Q325 145 333 145 L400 145 Q408 145 412 151 L434 190 L450 194 Q458 196 458 206 L458 252 Q458 256 454 256 L186 256 Z" }),
-      svg("path", { class: "sc-glass", d: "M302 190 L326 156 Q329 152 335 152 L362 152 L362 190 Z" }),
-      svg("path", { class: "sc-glass", d: "M370 152 L398 152 Q404 152 407 157 L428 190 L370 190 Z" }),
+      svg("path", { class: "sc-beam", fill: "url(#sc-beam)", d: "M458 203 L690 160 L690 290 L458 215 Z" }),
+      svg("path", { class: "sc-body", fill: "url(#sc-paint)", d: "M186 252 L186 206 Q186 196 196 195 L292 192 L320 151 Q325 145 333 145 L400 145 Q408 145 412 151 L434 190 L450 194 Q458 196 458 206 L458 252 Q458 256 454 256 L186 256 Z" }),
+      svg("path", { class: "sc-shine", d: "M194 201 L292 198 L322 154 Q326 150 333 150 L398 150" }),
+      svg("path", { class: "sc-glass", fill: "url(#sc-glass)", d: "M302 190 L326 156 Q329 152 335 152 L362 152 L362 190 Z" }),
+      svg("path", { class: "sc-glass", fill: "url(#sc-glass)", d: "M370 152 L398 152 Q404 152 407 157 L428 190 L370 190 Z" }),
+      svg("path", { class: "sc-glint", d: "M318 184 L336 158 M378 184 L392 158" }),
+      svg("path", { class: "sc-seam", d: "M366 192 L366 250 M298 196 L298 250" }),
+      svg("rect", { x: 372, y: 204, width: 15, height: 4, rx: 2, class: "sc-handle" }),
+      svg("rect", { x: 304, y: 204, width: 15, height: 4, rx: 2, class: "sc-handle" }),
+      svg("rect", { x: 196, y: 246, width: 252, height: 8, rx: 2, class: "sc-sill" }),
       svg("rect", { x: 334, y: 138, width: 66, height: 5, rx: 2, class: "sc-rack" }),
+      svg("path", { class: "sc-rack-leg", d: "M342 143 L342 147 M392 143 L392 147" }),
+      svg("rect", { x: 448, y: 200, width: 10, height: 13, rx: 3, class: "sc-head" }),
+      svg("rect", { x: 186, y: 201, width: 6, height: 15, rx: 2, class: "sc-tail" }),
       svg("rect", { x: 456, y: 226, width: 22, height: 28, rx: 4, class: "sc-bar" }),
-      svg("rect", { x: 448, y: 232, width: 14, height: 18, rx: 3, class: "sc-winch" }),
+      hit("winch", svg("g", null,
+        svg("rect", { x: 448, y: 232, width: 14, height: 18, rx: 3, class: "sc-winch", fill: "url(#sc-metal)" }),
+        svg("path", { class: "sc-winch-line", d: "M451 236 L459 236 M451 241 L459 241 M451 246 L459 246" }))),
+      arch(250), arch(396),
       wheel(250),
       wheel(396)
     );
@@ -143,11 +203,14 @@
 
     // ground, drawn over the vehicle so a bogged vehicle sinks into it
     const groundFill = svg("rect", { x: -700, y: PY, width: 2200, height: 700, class: "sc-ground" });
+    const groundDepth = svg("rect", { x: -700, y: PY, width: 2200, height: 700, fill: "url(#sc-depth)", class: "sc-depth" });
     const groundEdge = svg("line", { x1: -700, y1: PY, x2: 1500, y2: PY, class: "sc-edge" });
     const blades = svg("rect", { x: -700, y: PY - 8, width: 2200, height: 9, fill: "url(#sc-blades)", class: "sc-blades" });
     const mounds = svg("g", { class: "sc-mounds" },
       [250, 396].map((x) => [svg("ellipse", { cx: x - 30, cy: PY, rx: 26, ry: 9 }), svg("ellipse", { cx: x + 30, cy: PY, rx: 26, ry: 9 })]));
-    const ground = svg("g", { class: "sc-groundg" }, groundFill, mounds, blades, groundEdge);
+    const shadow = svg("ellipse", { cx: 322, cy: PY + 4, rx: 150, ry: 8, class: "sc-shadow" });
+    const treeShadow = svg("ellipse", { cx: 708, cy: PY + 4, rx: 46, ry: 6, class: "sc-shadow" });
+    const ground = svg("g", { class: "sc-groundg" }, groundFill, groundDepth, shadow, treeShadow, mounds, blades, groundEdge);
 
     // the distance to the anchor, as a dimension line over the rope (not to scale)
     const DIM_Y = 206;
@@ -160,16 +223,17 @@
       svg("path", { d: `M 694 ${DIM_Y} l -9 -4 v 8 Z`, class: "sc-dimhead" }),
       dimText);
 
-    const world = svg("g", { class: "sc-world" }, tree, ropes, vehicle, ground, dim);
+    const world = svg("g", { class: "sc-world" }, tree, ropes, ropeHit, vehicle, ground, dim);
     const node = svg("svg", { class: "scene-svg", viewBox: `0 0 ${VW} ${VH}`, role: "img", "aria-label": "Side view of the stuck vehicle, its winch and the anchor tree" }, defs, backdrop, world);
 
     let st = { sink: SINK.none, scale: 1, angle: 0 };
 
     function drawRopes(parts) {
       const ys = parts === 1 ? [241] : parts === 2 ? [237, 247] : [234, 241, 248];
-      const kids = ys.map((y, i) => svg("line", { x1: 462, y1: y, x2: parts > 1 ? 676 : 690, y2: 241 + (y - 241) * 0.3, class: "sc-rope" + (i % 2 ? " sc-rope--back" : "") }));
-      if (parts > 1) kids.push(svg("line", { x1: 685, y1: 241, x2: 694, y2: 239, class: "sc-blockstrap" }), svg("circle", { cx: 676, cy: 241, r: 9, class: "sc-block" }));
-      if (parts > 2) kids.push(svg("circle", { cx: 470, cy: 245, r: 7, class: "sc-block" }));
+      const line = (y, cls) => svg("line", { x1: 462, y1: y, x2: parts > 1 ? 676 : 690, y2: 241 + (y - 241) * 0.3, class: cls });
+      const kids = ys.map((y) => line(y, "sc-rope-under")).concat(ys.map((y, i) => line(y, "sc-rope" + (i % 2 ? " sc-rope--back" : ""))));
+      if (parts > 1) kids.push(svg("line", { x1: 685, y1: 241, x2: 694, y2: 239, class: "sc-blockstrap" }), svg("circle", { cx: 676, cy: 241, r: 9, class: "sc-block" }), svg("circle", { cx: 676, cy: 241, r: 2.5, class: "sc-block-pin" }));
+      if (parts > 2) kids.push(svg("circle", { cx: 470, cy: 245, r: 7, class: "sc-block" }), svg("circle", { cx: 470, cy: 245, r: 2, class: "sc-block-pin" }));
       ropes.replaceChildren(...kids);
     }
 
@@ -184,7 +248,7 @@
     }
 
     /*
-     * s: { look, bog, slopeDir, gradeDeg, parts, anchorM, status }
+     * s: { look, bog, slopeDir, gradeDeg, parts, anchorM, status, tips: { rope, winch, protector } }
      * Returns where the overlays go: the mass, winch and anchor-distance inputs.
      */
     function update(s) {
@@ -197,9 +261,11 @@
       groundFill.setAttribute("fill", `url(#sc-g-${look})`);
       groundEdge.style.stroke = LOOKS[look].edge;
       mounds.setAttribute("fill", `url(#sc-g-${look})`);
+      mounds.style.stroke = LOOKS[look].edge;
       mounds.style.opacity = s.bog === "none" ? 0 : 1;
       blades.style.opacity = LOOKS[look].blades ? 1 : 0;
       drawRopes(s.parts || 1);
+      tips = s.tips || {};
 
       dimText.textContent = s.anchorM ? `${U.n(s.anchorM, 0.1)} m to the anchor` : "";
 
@@ -212,6 +278,45 @@
     }
 
     return { el: node, update };
+  }
+
+  /*
+   * Lets the slope be set by dragging the picture up or down with a mouse or pen
+   * (on a phone the slider does it, so a finger on the picture still scrolls the page).
+   * get() -> the slope now, in degrees, uphill positive; onChange(deg) the same way.
+   */
+  function slopeDrag(node, get, onChange, onGrab) {
+    let from = null;
+    const angleAt = (e) => {
+      const b = node.getBoundingClientRect();
+      const x = ((e.clientX - b.left) / b.width) * SCENE.VW - SCENE.PX;
+      const y = ((e.clientY - b.top) / b.height) * SCENE.VH - SCENE.PY;
+      return Math.hypot(x, y) < 50 ? null : (Math.atan2(y, x) * 180) / Math.PI;
+    };
+    node.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "touch") return;
+      const a = angleAt(e);
+      if (a === null) return;
+      from = { a, deg: get() };
+      node.setPointerCapture(e.pointerId);
+      if (onGrab) onGrab(true);
+      e.preventDefault();
+    });
+    node.addEventListener("pointermove", (e) => {
+      if (!from) return;
+      const a = angleAt(e);
+      if (a === null) return;
+      let d = from.a - a;
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+      onChange(from.deg + d);
+    });
+    const up = () => {
+      if (from && onGrab) onGrab(false);
+      from = null;
+    };
+    node.addEventListener("pointerup", up);
+    node.addEventListener("pointercancel", up);
   }
 
   // ------------------------------------------------------------ rope picker thumbnails
@@ -286,7 +391,8 @@
       g.appendChild(svg("text", { class: "rg-angle", x: x0 + R + 6, y: y0 - 6 }, `${Math.round(deg)}°`));
     }
 
-    g.appendChild(svg("rect", { class: "rg-vehicle", x: 8, y: vy, width: xVeh - 20, height: vh, rx: 10 }));
+    g.appendChild(svg("defs", null, grad("rg-paint", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#2c4279"], [1, "#16224a"]])));
+    g.appendChild(svg("rect", { class: "rg-vehicle", fill: "url(#rg-paint)", x: 8, y: vy, width: xVeh - 20, height: vh, rx: 10 }));
     g.appendChild(svg("text", { class: "rg-label", x: 8 + (xVeh - 20) / 2, y: n > 2 ? vy + 22 : vy + vh / 2 + 6, "text-anchor": "middle" }, "Vehicle"));
     g.appendChild(svg("rect", { class: "rg-winch", x: xVeh - 18, y: yOf(0) - 9, width: 16, height: 18, rx: 3 }));
     const tree = P(treeX, yMid);
@@ -296,6 +402,7 @@
       const a = P(k === 0 ? xVeh - 2 : xVeh + 8, y);
       const b = P(k === n - 1 && n % 2 === 1 ? xAnc + 10 : xAnc, y);
       // the rope runs back toward the winch: leftwards on even lengths, rightwards on odd ones
+      g.appendChild(svg("line", { class: "rg-rope-under", x1: a.x, y1: a.y, x2: b.x, y2: b.y }));
       g.appendChild(svg("line", { class: "rg-rope " + (k % 2 ? "flow-r" : "flow-l"), x1: a.x, y1: a.y, x2: b.x, y2: b.y }));
       const lab = P(xVeh + span * 0.3, y);
       g.appendChild(svg("text", { class: "rg-seg", x: lab.x, y: lab.y - 7, "text-anchor": "middle" }, U.kg(rig.segments[k])));
@@ -342,6 +449,7 @@
       }
     });
     g.appendChild(svg("circle", { class: "rg-tree", cx: tree.x, cy: tree.y, r: treeR }));
+    [0.68, 0.4].forEach((f) => g.appendChild(svg("circle", { class: "rg-treering", cx: tree.x - 1, cy: tree.y + 1, r: treeR * f })));
     // anchor load: below the tree when the rope runs straight, above it when it's angled (clear of the ropes)
     const lx = Math.min(W - 4, tree.x + treeR + 6);
     const ly = angled ? tree.y - treeR - 30 : tree.y + treeR + 20;
@@ -399,18 +507,23 @@
     const H = feetY + 26;
 
     const g = svg("g", null);
+    g.appendChild(svg("defs", null,
+      grad("wn-metal", { x1: 0, y1: 0, x2: 1, y2: 0 }, [[0, "#6f82ad"], [0.45, "#dfe8fa"], [1, "#6f82ad"]]),
+      grad("wn-case", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#30426f"], [0.5, "#1c2747"], [1, "#101833"]]),
+      grad("wn-core", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#56658f"], [0.5, "#3e4c72"], [1, "#262f4c"]]),
+      radial("wn-bead", { cx: 0.35, cy: 0.3, r: 0.75 }, [[0, "#fff", 0.55], [1, "#fff", 0]])));
     // feet and base plate
     g.appendChild(svg("rect", { x: xMotor + 6, y: feetY, width: W - xMotor - 16, height: 5, rx: 2, class: "wn-base" }));
     // motor: a ribbed cylinder
-    g.appendChild(svg("rect", { x: xMotor, y: axisY - hh / 2, width: motorW, height: hh, rx: 10, class: "wn-motor" }));
+    g.appendChild(svg("rect", { x: xMotor, y: axisY - hh / 2, width: motorW, height: hh, rx: 10, class: "wn-motor", fill: "url(#wn-case)" }));
     for (let i = 1; i < 6; i++) g.appendChild(svg("line", { x1: xMotor + i * (motorW / 6), y1: axisY - hh / 2 + 6, x2: xMotor + i * (motorW / 6), y2: axisY + hh / 2 - 6, class: "wn-rib" }));
     // gearbox / clutch housing
-    g.appendChild(svg("rect", { x: xGear, y: axisY - hh / 2, width: gearW, height: hh, rx: 6, class: "wn-gear" }));
+    g.appendChild(svg("rect", { x: xGear, y: axisY - hh / 2, width: gearW, height: hh, rx: 6, class: "wn-gear", fill: "url(#wn-case)" }));
     g.appendChild(svg("circle", { cx: xGear + gearW / 2, cy: axisY - hh / 2 + 11, r: 5, class: "wn-knob" }));
     // flanges (end plates) and the barrel
-    g.appendChild(svg("rect", { x: xFlL, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange" }));
-    g.appendChild(svg("rect", { x: xFlR, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange" }));
-    g.appendChild(svg("rect", { x: x0, y: baseY, width: drumW, height: coreH, class: "wn-barrel" }));
+    g.appendChild(svg("rect", { x: xFlL, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange", fill: "url(#wn-metal)" }));
+    g.appendChild(svg("rect", { x: xFlR, y: flTop, width: fl, height: flH, rx: 3, class: "wn-flange", fill: "url(#wn-metal)" }));
+    g.appendChild(svg("rect", { x: x0, y: baseY, width: drumW, height: coreH, class: "wn-barrel", fill: "url(#wn-core)" }));
     g.appendChild(svg("line", { x1: x0, y1: axisY, x2: x0 + drumW, y2: axisY, class: "wn-axis" }));
     // tie bar across the top, from motor to gearbox
     g.appendChild(svg("rect", { x: xMotor + 8, y: flTop - 9, width: xGear + gearW - xMotor - 16, height: 5, rx: 2.5, class: "wn-tie" }));
@@ -425,22 +538,32 @@
         const cx = x0 + pitch / 2 + idx * pitch + (li % 2 ? pitch / 2 : 0);
         const cy = baseY - pitch / 2 - li * rowH;
         cum += wrapLen;
-        const c = svg("circle", { cx, cy, r, class: "dm-wrap" });
+        const c = svg("circle", { cx, cy, r, class: "dm-wrap", "data-layer": li });
         circles.push({ c, end: cum, cx, cy });
         g.appendChild(c);
+        g.appendChild(svg("circle", { cx, cy, r, class: "dm-bead", fill: "url(#wn-bead)" }));
       }
     });
 
     // the rope leaving the outermost wrap, off to the anchor
+    const exitUnder = svg("path", { class: "wn-exit-under", d: "" });
     const exit = svg("path", { class: "wn-exit", d: "" });
     const exitLabel = svg("text", { class: "wn-text wn-text--exit", x: W - 6, y: 14, "text-anchor": "end" }, "to the anchor →");
-    g.append(exit, exitLabel);
+    g.append(exitUnder, exit, exitLabel);
     // names of the parts
     g.appendChild(svg("text", { class: "wn-text", x: xMotor + motorW / 2, y: H - 6, "text-anchor": "middle" }, "motor"));
     g.appendChild(svg("text", { class: "wn-text", x: x0 + drumW / 2, y: H - 6, "text-anchor": "middle" }, "drum, cut through: one circle per wrap"));
     g.appendChild(svg("text", { class: "wn-text", x: xGear + gearW / 2, y: H - 6, "text-anchor": "middle" }, "gearbox"));
 
     const node = svg("svg", { class: "drum-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "The winch from the front, its drum cut through: each circle is one wrap of rope, stacked in layers" }, g);
+    // point at a wrap: its layer, and how much of the rated pull the winch has there
+    node.addEventListener("pointermove", (e) => {
+      const li = e.target.getAttribute ? e.target.getAttribute("data-layer") : null;
+      const l = li === null ? null : dr.layers[+li];
+      if (!l) return hideTip();
+      showTip([`Layer ${l.n}`, `${Math.round(l.ratio * 100)}% of rated pull`, `holds ${U.n(l.capM, 0.1)} m of rope`], e.clientX, e.clientY);
+    });
+    node.addEventListener("pointerleave", hideTip);
     return {
       el: node,
       set(onDrumM, startOnDrumM) {
@@ -452,7 +575,9 @@
           if (on) last = w;
         });
         const from = last || { cx: x0 + pitch / 2, cy: baseY - pitch / 2 };
-        exit.setAttribute("d", `M ${from.cx} ${from.cy - r} C ${from.cx} ${flTop - 18}, ${W - 60} ${flTop - 22}, ${W - 6} 22`);
+        const d = `M ${from.cx} ${from.cy - r} C ${from.cx} ${flTop - 18}, ${W - 60} ${flTop - 22}, ${W - 6} 22`;
+        exit.setAttribute("d", d);
+        exitUnder.setAttribute("d", d);
       },
     };
   }
@@ -462,26 +587,35 @@
     const cx = 110;
     const cy = 112;
     const R = 92;
-    const arcPath = (f) => {
+    const pt = (f, r) => {
       const a = Math.PI - f * Math.PI;
-      return `M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R * Math.cos(a)} ${cy - R * Math.sin(a)}`;
+      return `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy - r * Math.sin(a)).toFixed(2)}`;
     };
-    const track = svg("path", { d: arcPath(1), class: "ga-track" });
-    const fill = svg("path", { d: arcPath(0.001), class: "ga-fill" });
+    const arc = (f0, f1, r) => `M ${pt(f0, r)} A ${r} ${r} 0 0 1 ${pt(f1, r)}`;
+    const defs = svg("defs", null,
+      svg("linearGradient", { id: "ga-grad", gradientUnits: "userSpaceOnUse", x1: cx - R, y1: 0, x2: cx + R, y2: 0 },
+        svg("stop", { offset: 0, "stop-color": "#b9b0ff" }), svg("stop", { offset: 0.55, "stop-color": "#9085e9" }), svg("stop", { offset: 1, "stop-color": "#7c5cff" })),
+      svg("filter", { id: "ga-glow", x: "-30%", y: "-30%", width: "160%", height: "160%" }, svg("feGaussianBlur", { stdDeviation: 4 })));
+    const track = svg("path", { d: arc(0, 1, R), class: "ga-track" });
+    const glow = svg("path", { d: arc(0, 0.001, R), class: "ga-fill ga-fill--glow", stroke: "url(#ga-grad)", filter: "url(#ga-glow)" });
+    const fill = svg("path", { d: arc(0, 0.001, R), class: "ga-fill", stroke: "url(#ga-grad)" });
     const ticks = svg("g", { class: "ga-ticks" });
-    const peak = svg("line", { class: "ga-peak", x1: cx, y1: cy - R - 9, x2: cx, y2: cy - R + 9 });
-    const needle = svg("g", { class: "ga-needle" }, svg("path", { d: `M ${cx - 4} ${cy} L ${cx} ${cy - R + 16} L ${cx + 4} ${cy} Z` }), svg("circle", { cx, cy, r: 7 }));
-    const node = svg("svg", { class: "gauge-svg", viewBox: "0 0 220 122", role: "img", "aria-label": "Dial of the current the winch draws" }, track, fill, ticks, peak, needle);
+    const peak = svg("path", { class: "ga-peak", d: `M ${cx - 5} ${cy - R - 14} L ${cx + 5} ${cy - R - 14} L ${cx} ${cy - R - 6} Z` });
+    const needle = svg("g", { class: "ga-needle" }, svg("path", { d: `M ${cx - 3.6} ${cy} L ${cx - 0.7} ${cy - R + 13} L ${cx + 0.7} ${cy - R + 13} L ${cx + 3.6} ${cy} Z` }));
+    const hub = svg("g", { class: "ga-hub" }, svg("circle", { cx, cy, r: 8.5 }), svg("circle", { cx, cy, r: 3, class: "ga-hub-dot" }));
+    const node = svg("svg", { class: "gauge-svg", viewBox: "0 0 220 124", role: "img", "aria-label": "Dial of the current the winch draws" }, defs, track, glow, fill, ticks, peak, needle, hub);
     let max = 500;
     return {
       el: node,
       setScale(peakA) {
         max = Math.max(300, Math.ceil((peakA * 1.1) / 100) * 100);
         const kids = [];
-        for (let v = 0; v <= max; v += 100) {
+        for (let v = 0; v <= max; v += 50) {
+          const major = v % 100 === 0;
           const a = Math.PI - (v / max) * Math.PI;
-          kids.push(svg("line", { x1: cx + (R - 7) * Math.cos(a), y1: cy - (R - 7) * Math.sin(a), x2: cx + (R + 5) * Math.cos(a), y2: cy - (R + 5) * Math.sin(a) }));
-          if (max <= 500 || v % 200 === 0) kids.push(svg("text", { x: cx + (R - 22) * Math.cos(a), y: cy - (R - 22) * Math.sin(a) + 4, "text-anchor": "middle" }, String(v)));
+          const r1 = major ? R + 5 : R - 2;
+          kids.push(svg("line", { class: major ? null : "ga-minor", x1: cx + (R - 7) * Math.cos(a), y1: cy - (R - 7) * Math.sin(a), x2: cx + r1 * Math.cos(a), y2: cy - r1 * Math.sin(a) }));
+          if (major && (max <= 500 || v % 200 === 0)) kids.push(svg("text", { x: cx + (R - 22) * Math.cos(a), y: cy - (R - 22) * Math.sin(a) + 4, "text-anchor": "middle" }, String(v)));
         }
         ticks.replaceChildren(...kids);
         peak.style.transform = `rotate(${(peakA / max) * 180 - 90}deg)`;
@@ -489,7 +623,12 @@
       set(amps) {
         const f = Math.max(0, Math.min(1, amps / max));
         needle.style.transform = `rotate(${f * 180 - 90}deg)`;
-        fill.setAttribute("d", arcPath(Math.max(f, 0.001)));
+        const d = arc(0, Math.max(f, 0.001), R);
+        fill.setAttribute("d", d);
+        glow.setAttribute("d", d);
+        glow.style.opacity = (0.25 + f * 0.6).toFixed(2);
+        // at rest the round end of an empty arc would show as a dot
+        fill.style.display = glow.style.display = f < 0.004 ? "none" : "";
       },
     };
   }
@@ -497,8 +636,10 @@
   // ------------------------------------------------------------ line chart with a playhead
   /*
    * o: { width, height, points, series: [{ key, cls, step, label, short }], yUnit,
-   *      xLabel, labelEnds, tip(p) -> [lines], aria }
+   *      xLabel, labelEnds, tip(p) -> [lines], aria,
+   *      area (key of the series to shade under), onScrub(x) (press or drag on the chart) }
    */
+  let chartCount = 0;
   function lineChart(o) {
     const W = Math.max(280, Math.min(720, Math.round(o.width || 600)));
     const narrow = W < 460;
@@ -511,10 +652,12 @@
     const yMax = Math.ceil((yMaxRaw * 1.08) / step) * step;
     const X = (x) => pad.l + (x / xMax) * (W - pad.l - pad.r);
     const Y = (y) => H - pad.b - (y / yMax) * (H - pad.t - pad.b);
+    const uid = "ch" + ++chartCount;
 
     const g = svg("g", null);
+    g.appendChild(svg("rect", { class: "ch-plot", x: pad.l, y: pad.t, width: W - pad.l - pad.r, height: H - pad.t - pad.b, rx: 4 }));
     for (let v = 0; v <= yMax + 1e-9; v += step) {
-      g.appendChild(svg("line", { class: "ch-grid", x1: pad.l, x2: W - pad.r, y1: Y(v), y2: Y(v) }));
+      g.appendChild(svg("line", { class: "ch-grid" + (v === 0 ? " ch-grid--base" : ""), x1: pad.l, x2: W - pad.r, y1: Y(v), y2: Y(v) }));
       g.appendChild(svg("text", { class: "ch-tick", x: pad.l - 8, y: Y(v) + 4, "text-anchor": "end" }, U.n(v, 1)));
     }
     g.appendChild(svg("text", { class: "ch-unit", x: 4, y: 11, "text-anchor": "start" }, o.yUnit));
@@ -522,13 +665,25 @@
     for (let v = 0; v <= xMax + 1e-9; v += xStep) g.appendChild(svg("text", { class: "ch-tick", x: X(v), y: H - pad.b + 16, "text-anchor": "middle" }, U.n(v, xStep < 1 ? 0.1 : 1)));
     if (o.xLabel) g.appendChild(svg("text", { class: "ch-axis", x: (pad.l + W - pad.r) / 2, y: H - 4, "text-anchor": "middle" }, o.xLabel));
 
-    o.series.forEach((s) => {
+    const pathOf = (s) => {
       let d = "";
       pts.forEach((p, i) => {
         if (i === 0) d += `M ${X(p.x)} ${Y(p[s.key])}`;
         else if (s.step) d += ` L ${X(p.x)} ${Y(pts[i - 1][s.key])} L ${X(p.x)} ${Y(p[s.key])}`;
         else d += ` L ${X(p.x)} ${Y(p[s.key])}`;
       });
+      return d;
+    };
+    const areaSeries = o.area && o.series.find((s) => s.key === o.area);
+    if (areaSeries) {
+      g.appendChild(svg("defs", null, svg("linearGradient", { id: uid + "-area", x1: 0, y1: 0, x2: 0, y2: 1 },
+        svg("stop", { offset: 0, class: "ch-area-stop " + areaSeries.cls, "stop-opacity": 0.3 }),
+        svg("stop", { offset: 1, class: "ch-area-stop " + areaSeries.cls, "stop-opacity": 0 }))));
+      g.appendChild(svg("path", { class: "ch-area", fill: `url(#${uid}-area)`, d: `${pathOf(areaSeries)} L ${X(xMax)} ${Y(0)} L ${X(0)} ${Y(0)} Z` }));
+    }
+    o.series.forEach((s) => {
+      const d = pathOf(s);
+      g.appendChild(svg("path", { class: "ch-line ch-line--glow " + s.cls, d }));
       g.appendChild(svg("path", { class: "ch-line " + s.cls, d }));
     });
     if (o.labelEnds) {
@@ -538,20 +693,49 @@
       o.series.forEach((s, i) => g.appendChild(svg("text", { class: "ch-label", x: W - pad.r + 8, y: ys[i] + 4 + (i === 0 ? apart : -apart) }, narrow ? s.short : s.label)));
     }
 
+    // where the pointer is: a crosshair with a ring on each line
+    const hover = svg("g", { class: "ch-hover", style: "display:none" },
+      svg("line", { class: "ch-cross", y1: pad.t, y2: H - pad.b }),
+      o.series.map((s) => svg("circle", { class: "ch-ring " + s.cls, r: 6 })));
     const head = svg("line", { class: "ch-playhead", x1: X(0), x2: X(0), y1: pad.t, y2: H - pad.b });
     const dots = o.series.map((s) => svg("circle", { class: "ch-dot " + s.cls, r: 4.5, cx: X(0), cy: Y(pts[0][s.key]) }));
-    g.append(head, ...dots);
-    const hit = svg("rect", { x: pad.l, y: pad.t, width: W - pad.l - pad.r, height: H - pad.t - pad.b, fill: "transparent" });
+    g.append(hover, head, ...dots);
+    const hit = svg("rect", { class: "ch-hit" + (o.onScrub ? " is-scrub" : ""), x: pad.l, y: pad.t, width: W - pad.l - pad.r, height: H - pad.t - pad.b, fill: "transparent" });
     g.appendChild(hit);
     const node = svg("svg", { class: "chart-svg", viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": o.aria }, g);
-    hit.addEventListener("pointermove", (e) => {
+    let down = false;
+    const point = (e) => {
       const box = node.getBoundingClientRect();
       const sx = ((e.clientX - box.left) / box.width) * W;
       const x = Math.max(0, Math.min(xMax, ((sx - pad.l) / (W - pad.l - pad.r)) * xMax));
       const p = pts.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a));
+      hover.style.display = "";
+      hover.firstChild.setAttribute("x1", X(p.x));
+      hover.firstChild.setAttribute("x2", X(p.x));
+      o.series.forEach((s, i) => {
+        hover.childNodes[i + 1].setAttribute("cx", X(p.x));
+        hover.childNodes[i + 1].setAttribute("cy", Y(p[s.key]));
+      });
       showTip(o.tip(p), e.clientX, e.clientY);
+      if (down && o.onScrub) o.onScrub(x);
+    };
+    const leave = () => {
+      down = false;
+      hover.style.display = "none";
+      hideTip();
+    };
+    hit.addEventListener("pointerdown", (e) => {
+      down = true;
+      if (o.onScrub && hit.setPointerCapture) hit.setPointerCapture(e.pointerId);
+      point(e);
     });
-    hit.addEventListener("pointerleave", hideTip);
+    hit.addEventListener("pointermove", point);
+    hit.addEventListener("pointerup", (e) => {
+      down = false;
+      if (e.pointerType !== "mouse") leave();
+    });
+    hit.addEventListener("pointercancel", leave);
+    hit.addEventListener("pointerleave", () => { if (!down) leave(); });
 
     function valuesAt(x) {
       let i = 0;
@@ -584,17 +768,45 @@
 
   // ------------------------------------------------------------ rope angle, seen from above
   // The vehicle points the way it must move; the rope swings off to the anchor.
-  function angleView() {
+  // onChange(deg): called while the anchor is dragged round.
+  function angleView(onChange) {
     const rope = svg("g", { class: "av-rope" },
+      svg("line", { x1: 46, y1: 34, x2: 118, y2: 34, class: "av-line-under" }),
       svg("line", { x1: 46, y1: 34, x2: 118, y2: 34, class: "av-line" }),
-      svg("circle", { cx: 124, cy: 34, r: 7, class: "av-tree" }));
-    const node = svg("svg", { class: "angle-svg", viewBox: "0 0 140 68", "aria-hidden": "true" },
+      svg("circle", { cx: 124, cy: 34, r: 7, class: "av-tree" }),
+      svg("circle", { cx: 124, cy: 34, r: 3, class: "av-ring" }),
+      onChange ? svg("circle", { cx: 124, cy: 34, r: 10.5, class: "av-grip" }) : null);
+    const node = svg("svg", { class: "angle-svg" + (onChange ? " is-drag" : ""), viewBox: "0 0 140 68", "aria-hidden": "true" },
+      svg("defs", null, grad("av-paint", { x1: 0, y1: 0, x2: 0, y2: 1 }, [[0, "#2c4279"], [1, "#16224a"]])),
       svg("line", { x1: 46, y1: 34, x2: 132, y2: 34, class: "av-path" }),
-      svg("path", { d: "M10 22 h30 q6 0 6 6 v12 q0 6 -6 6 h-30 q-4 0 -4 -4 v-16 q0 -4 4 -4 Z", class: "av-veh" }),
+      svg("path", { d: "M10 22 h30 q6 0 6 6 v12 q0 6 -6 6 h-30 q-4 0 -4 -4 v-16 q0 -4 4 -4 Z", class: "av-veh", fill: "url(#av-paint)" }),
       svg("rect", { x: 28, y: 25, width: 8, height: 18, rx: 2, class: "av-glass" }),
       svg("path", { class: "av-arc", d: "" }),
       rope);
     const arc = node.querySelector(".av-arc");
+    if (onChange) {
+      let down = false;
+      const turn = (e) => {
+        const box = node.getBoundingClientRect();
+        const x = ((e.clientX - box.left) / box.width) * 140 - 46;
+        const y = ((e.clientY - box.top) / box.height) * 68 - 34;
+        onChange(Math.max(0, Math.min(90, Math.round((Math.atan2(-y, Math.max(x, 1)) * 180) / Math.PI))));
+      };
+      node.addEventListener("pointerdown", (e) => {
+        down = true;
+        node.classList.add("is-dragging");
+        node.setPointerCapture(e.pointerId);
+        turn(e);
+        e.preventDefault();
+      });
+      node.addEventListener("pointermove", (e) => { if (down) turn(e); });
+      const up = () => {
+        down = false;
+        node.classList.remove("is-dragging");
+      };
+      node.addEventListener("pointerup", up);
+      node.addEventListener("pointercancel", up);
+    }
     return {
       el: node,
       set(deg) {
@@ -606,5 +818,5 @@
     };
   }
 
-  root.WINCH_DIAGRAMS = { scene, lineThumb, rigging, drum, gauge, lineChart, angleView, LOOKS };
+  root.WINCH_DIAGRAMS = { scene, slopeDrag, lineThumb, rigging, drum, gauge, lineChart, angleView, LOOKS };
 })(window);

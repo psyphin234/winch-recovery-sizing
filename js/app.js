@@ -113,6 +113,18 @@
     sceneView = V.scene();
     $("scene-pic").prepend(sceneView.el);
     placeFields();
+    // drag the picture up or down to tilt the slope (mouse or pen); the slider follows
+    V.slopeDrag(sceneView.el,
+      () => (S.slopeDir === "down" ? -1 : 1) * numOr(S.gradeDeg, 0),
+      (deg) => {
+        const max = +$("gradeDeg").max || 45;
+        const v = Math.round(Math.max(-max, Math.min(max, deg)));
+        const dir = v > 0 ? "up" : v < 0 ? "down" : S.slopeDir;
+        if (Math.abs(v) === numOr(S.gradeDeg, 0) && dir === S.slopeDir) return;
+        $("gradeDeg").value = Math.abs(v);
+        set({ gradeDeg: Math.abs(v), slopeDir: dir });
+      },
+      (on) => $("scene-pic").classList.toggle("is-tilting", on));
 
     // ground chips
     D.grounds.forEach((g) => {
@@ -146,7 +158,12 @@
     $("gradeDeg").addEventListener("input", (e) => set({ gradeDeg: +e.target.value }));
 
     // rope angle, with a little top view that swings with the slider
-    angleView = V.angleView();
+    angleView = V.angleView((deg) => {
+      const v = Math.min(+$("ropeAngleDeg").max || 45, deg);
+      if (v === numOr(S.ropeAngleDeg, 0)) return;
+      $("ropeAngleDeg").value = v;
+      set({ ropeAngleDeg: v });
+    });
     $("angle-view").appendChild(angleView.el);
     $("ropeAngleDeg").max = D.rule("line-angle").params.sliderMaxDeg;
     $("ropeAngleDeg").addEventListener("input", (e) => set({ ropeAngleDeg: +e.target.value }));
@@ -304,6 +321,11 @@
       gradeDeg: deg,
       parts: S.parts,
       anchorM: R.anchorM,
+      tips: {
+        rope: ["Winch rope", cur.rig.parts === 1 ? "Single line" : `${cur.rig.parts} lengths pull on the vehicle`, `The winch pulls ${U.kg(cur.rig.winchKg)}`],
+        winch: [R.rating.ok ? winchName() : "Winch", `Pulls ${U.kg(cur.rig.winchKg)} in this pull`],
+        protector: ["Tree protector", `Holds ${U.kg(cur.rig.anchorKg)} in this pull`],
+      },
       status: { ok: "ok", close: "close", short: "short", rope: "short", rolls: "rolls", idle: "idle" }[cur.status],
     });
     place($("f-mass"), pos.massField);
@@ -481,6 +503,13 @@
     const tipLines = (p) => [`${U.n(p.x, 0.1)} m moved · layer ${p.layer}`, `Winch can pull ${U.kg(p.availKg)}`, `Needed ${U.kg(p.neededKg)}`, `${U.n(p.amps, 1)} A · rope ${U.n(p.lineSpeedMMin, 0.1)} m/min`, `${U.n(p.elecKw, 0.1)} kW drawn · ${U.n(p.ropeKw, 0.01)} kW at the rope`];
     const pullChart = V.lineChart({
       width: w, height: 200, points: sim.points, yUnit: "kg", xLabel: "Metres the vehicle has moved", labelEnds: true, tip: tipLines,
+      area: "availKg",
+      onScrub: (x) => {
+        if (play.raf) cancelAnimationFrame(play.raf);
+        play.raf = 0;
+        frame(x);
+        stopPlay();
+      },
       series: [
         { key: "availKg", cls: "ch-line--avail", step: true, label: "Winch can pull", short: "Winch" },
         { key: "neededKg", cls: "ch-line--need", label: "Pull needed", short: "Needed" },
